@@ -133,9 +133,19 @@ export default function RoomLandingPage() {
               "0 1px 2px rgba(0,0,0,0.5), 0 2px 16px rgba(0,0,0,0.4)",
           }}
         >
-          {greetingPrefix(now)},
-          <br />
-          {reservation.guestFirstName}!
+          {state.paid ? (
+            <>
+              {reservation.guestFirstName}, we&rsquo;ve loved
+              <br />
+              having you stay!
+            </>
+          ) : (
+            <>
+              {greetingPrefix(now)},
+              <br />
+              {reservation.guestFirstName}!
+            </>
+          )}
         </h1>
         <p
           className="mt-3 text-[13px] text-white tracking-tight"

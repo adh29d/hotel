@@ -135,7 +135,7 @@ export default function RoomLandingPage() {
         >
           {greetingPrefix(now)},
           <br />
-          {reservation.guestFirstName}.
+          {reservation.guestFirstName}!
         </h1>
         <p
           className="mt-3 text-[13px] text-white tracking-tight"

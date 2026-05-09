@@ -6,7 +6,7 @@ import { useOrder } from "@/lib/OrderContext";
 import { formatMoney, lateCheckoutLabel } from "@/lib/mockData";
 import AnimatedTotal from "@/components/AnimatedTotal";
 
-type Method = "apple" | "samsung" | "card" | null;
+type Method = "apple" | "card" | null;
 
 export default function PaymentPage() {
   const params = useParams<{ roomNumber: string }>();
@@ -28,6 +28,9 @@ export default function PaymentPage() {
   }, [params.roomNumber, initRoom]);
 
   if (!reservation) return null;
+
+  const hasLate = state.checkoutHour > 10;
+  const hasOrder = state.coffeeLines.length > 0;
 
   const pay = (method: Exclude<Method, null>) => {
     if (processing) return;
@@ -64,23 +67,25 @@ export default function PaymentPage() {
       <section className="mx-5 mt-5 rounded-3xl bg-surface p-5 animate-fadeUp">
         <ul className="divide-y divide-line/80 text-[14px]">
           <li className="flex justify-between py-2.5">
-            <span className="text-muted">Room balance</span>
+            <span className="text-muted">Outstanding balance</span>
             <span className="tabular-nums text-ink">{formatMoney(outstandingBalance)}</span>
           </li>
-          <li className="flex justify-between py-2.5">
-            <span className="text-muted">
-              Late checkout · {lateCheckoutLabel(state.checkoutHour)}
-            </span>
-            <span className="tabular-nums text-ink">
-              {lateCheckoutCharge === 0 ? "Included" : formatMoney(lateCheckoutCharge)}
-            </span>
-          </li>
-          <li className="flex justify-between py-2.5">
-            <span className="text-muted">Coffee order</span>
-            <span className="tabular-nums text-ink">
-              {coffeeSubtotal === 0 ? "—" : formatMoney(coffeeSubtotal)}
-            </span>
-          </li>
+          {hasLate && (
+            <li className="flex justify-between py-2.5">
+              <span className="text-muted">
+                Late checkout · {lateCheckoutLabel(state.checkoutHour)}
+              </span>
+              <span className="tabular-nums text-ink">
+                {formatMoney(lateCheckoutCharge)}
+              </span>
+            </li>
+          )}
+          {hasOrder && (
+            <li className="flex justify-between py-2.5">
+              <span className="text-muted">Coffee order</span>
+              <span className="tabular-nums text-ink">{formatMoney(coffeeSubtotal)}</span>
+            </li>
+          )}
         </ul>
         <div className="mt-3 pt-3 border-t border-line flex items-baseline justify-between">
           <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
@@ -99,13 +104,6 @@ export default function PaymentPage() {
           state={processing === "apple" ? "loading" : processing ? "disabled" : "idle"}
           variant="dark"
           icon={<AppleIcon />}
-        />
-        <PayButton
-          label="Samsung Pay"
-          onClick={() => pay("samsung")}
-          state={processing === "samsung" ? "loading" : processing ? "disabled" : "idle"}
-          variant="dark"
-          icon={<SamsungIcon />}
         />
         <PayButton
           label="Pay with card"
@@ -186,12 +184,6 @@ function AppleIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.9-.8-3.1-.8-1.6 0-3.1.9-3.9 2.4-1.7 2.9-.4 7.2 1.2 9.5.8 1.1 1.7 2.4 3 2.4 1.2 0 1.7-.8 3.2-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.3.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.6-1-2.6-3.2zm-2.2-6c.7-.8 1.1-2 1-3.1-.9.1-2.1.6-2.8 1.4-.6.7-1.2 1.9-1 2.9 1.1.1 2.1-.5 2.8-1.2z" />
     </svg>
-  );
-}
-
-function SamsungIcon() {
-  return (
-    <span className="text-[12px] font-semibold tracking-wide">SΛMSUNG</span>
   );
 }
 

@@ -65,7 +65,7 @@ export default function LateCheckoutSlider({ hour, onHourChange }: Props) {
       </div>
 
       <p className="mt-3 text-[11px] text-muted leading-snug">
-        Times subject to availability — confirmed once payment is made.
+        These times are currently available for your room, but subject to change at any time. Extensions are only confirmed once payment is made.
       </p>
     </div>
   );

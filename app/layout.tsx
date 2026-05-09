@@ -25,16 +25,18 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#F7F4EF",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
-      <body className="font-sans">
+      <body className="font-sans bg-white">
         <OrderProvider>
-          <div className="min-h-screen flex justify-center">
-            <div className="w-full max-w-[440px] min-h-screen bg-bone">{children}</div>
+          <div className="min-h-[100dvh] flex justify-center bg-[#0a0a0a]">
+            <div className="w-full max-w-[440px] min-h-[100dvh] bg-white relative overflow-hidden">
+              {children}
+            </div>
           </div>
         </OrderProvider>
       </body>

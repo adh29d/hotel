@@ -1,13 +1,18 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
 import { formatMoney, lateCheckoutLabel } from "@/lib/mockData";
 import LateCheckoutSlider from "@/components/LateCheckoutSlider";
 import CoffeeOrder from "@/components/CoffeeOrder";
 import AnimatedTotal from "@/components/AnimatedTotal";
+import BottomSheet from "@/components/BottomSheet";
+
+const HERO_SRC =
+  "https://beachcomberhotelandresort.com.au/wp-content/uploads/2022/09/Pelicans-Breakfast-417b.jpg";
 
 export default function RoomLandingPage() {
   const params = useParams<{ roomNumber: string }>();
@@ -23,11 +28,19 @@ export default function RoomLandingPage() {
     orderSubtotal,
     total,
   } = useOrder();
+  const [coffeeOpen, setCoffeeOpen] = useState(false);
   const [requested, setRequested] = useState(false);
 
   useEffect(() => {
     initRoom(roomNumber);
   }, [roomNumber, initRoom]);
+
+  const itemCount = useMemo(
+    () =>
+      state.coffeeLines.reduce((s, l) => s + l.qty, 0) +
+      state.pastryLines.reduce((s, l) => s + l.qty, 0),
+    [state.coffeeLines, state.pastryLines],
+  );
 
   if (!reservation) {
     return (
@@ -46,124 +59,164 @@ export default function RoomLandingPage() {
   const allPaid = reservation.alreadyPaid;
 
   return (
-    <main className="pb-40">
+    <main className="relative h-[100dvh] flex flex-col">
+      {/* Hero image with fade-down to white */}
+      <div className="absolute inset-x-0 top-0 h-[44%] -z-0 overflow-hidden">
+        <Image
+          src={HERO_SRC}
+          alt=""
+          fill
+          priority
+          sizes="440px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-white/0 to-white" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-white" />
+      </div>
+
       {/* Header */}
-      <header className="px-6 pt-10 pb-6 animate-fadeUp">
-        <div className="text-xs uppercase tracking-[0.18em] text-muted">RMS Pay</div>
-        <h1 className="mt-3 font-serif text-[34px] leading-[1.05] text-ink">
-          Good morning,
-          <br />
-          {reservation.guestFirstName}.
-        </h1>
-        <p className="mt-3 text-sm text-muted">
-          Room {reservation.roomNumber} · Check-out{" "}
-          <span className="text-ink">{lateCheckoutLabel(state.checkoutHour)}</span> ·{" "}
-          {reservation.checkOutDate}
-        </p>
+      <header className="relative z-10 px-6 pt-8 pb-2 animate-fadeUp">
+        <div className="flex items-center justify-between">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-white/90 drop-shadow-sm">
+            RMS Pay
+          </div>
+          <div className="text-[11px] tracking-[0.12em] text-white/90 drop-shadow-sm tabular-nums">
+            ROOM {reservation.roomNumber}
+          </div>
+        </div>
       </header>
 
-      <div className="px-6 space-y-4">
-        {/* Outstanding balance card */}
-        <section className="rounded-2xl bg-white p-5 shadow-card animate-fadeUp">
+      {/* Spacer to push content below hero */}
+      <div className="relative z-10 flex-1 flex flex-col justify-end px-5 pb-3">
+        {/* Greeting card */}
+        <section className="px-1 pb-4 animate-fadeUp">
+          <h1 className="font-serif text-[30px] leading-[1.05] text-ink">
+            Good morning, {reservation.guestFirstName}.
+          </h1>
+          <p className="mt-1 text-[13px] text-muted">
+            {reservation.checkOutDate} · checkout{" "}
+            <span className="text-ink">{lateCheckoutLabel(state.checkoutHour)}</span>
+          </p>
+        </section>
+
+        {/* Single combined card: balance + late checkout + add-on */}
+        <section className="rounded-3xl bg-surface p-5 animate-fadeUp">
+          {/* Balance row */}
           <div className="flex items-baseline justify-between">
-            <h2 className="font-serif text-xl text-ink">Your balance</h2>
-            <span className="text-xs text-muted">
-              {reservation.nights} night{reservation.nights === 1 ? "" : "s"}
-            </span>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
+                {allPaid ? "Stay paid" : "Outstanding"}
+              </div>
+              <div className="mt-1 font-serif text-[32px] leading-none text-ink tabular-nums">
+                {allPaid ? "$0" : formatMoney(outstandingBalance)}
+              </div>
+            </div>
+            <div className="text-right text-[12px] text-muted">
+              {allPaid ? (
+                <span>You&rsquo;re all set.</span>
+              ) : reservation.charges.length > 0 ? (
+                <ul className="space-y-0.5 tabular-nums">
+                  {reservation.charges.map((c) => (
+                    <li key={c.label}>
+                      {c.label} · {formatMoney(c.amount)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <span>Nothing owing</span>
+              )}
+            </div>
           </div>
 
-          {allPaid ? (
-            <div className="mt-4 rounded-xl bg-accent-soft px-4 py-3 text-accent text-sm">
-              <div className="font-medium">You&rsquo;re all set.</div>
-              <div className="opacity-80 mt-0.5">Your stay is fully paid. Anything below is optional.</div>
-            </div>
-          ) : reservation.charges.length === 0 ? (
-            <div className="mt-4 text-sm text-muted">Nothing outstanding on your room.</div>
-          ) : (
-            <ul className="mt-4 divide-y divide-line">
-              {reservation.charges.map((c) => (
-                <li key={c.label} className="flex items-center justify-between py-2.5">
-                  <span className="text-[15px] text-ink">{c.label}</span>
-                  <span className="text-[15px] tabular-nums text-ink">{formatMoney(c.amount)}</span>
-                </li>
-              ))}
-              <li className="flex items-center justify-between pt-3">
-                <span className="text-sm text-muted">Subtotal</span>
-                <span className="text-sm tabular-nums text-muted">
-                  {formatMoney(outstandingBalance)}
-                </span>
-              </li>
-            </ul>
+          {!allPaid && reservation.charges.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setRequested(true)}
+              disabled={requested}
+              className="mt-2 text-[11px] text-accent hover:underline disabled:no-underline disabled:text-muted"
+            >
+              {requested
+                ? "Itemised invoice request sent."
+                : "Request itemised invoice from reception"}
+            </button>
           )}
 
+          <div className="my-4 h-px bg-line" />
+
+          {/* Late checkout slider */}
+          <LateCheckoutSlider
+            hour={state.checkoutHour}
+            onHourChange={setCheckoutHour}
+          />
+
+          <div className="my-4 h-px bg-line" />
+
+          {/* Coffee + pastries entry row */}
           <button
             type="button"
-            onClick={() => setRequested(true)}
-            disabled={requested || reservation.charges.length === 0}
-            className="mt-4 w-full text-xs text-accent hover:underline disabled:no-underline disabled:text-muted disabled:cursor-default"
+            onClick={() => setCoffeeOpen(true)}
+            className="w-full flex items-center justify-between text-left transition active:scale-[0.99]"
           >
-            {requested
-              ? "Request sent — reception will email it shortly."
-              : reservation.charges.length === 0
-                ? ""
-                : "Request itemised invoice from reception"}
-          </button>
-        </section>
-
-        {/* Late checkout */}
-        <LateCheckoutSlider hour={state.checkoutHour} onHourChange={setCheckoutHour} />
-
-        {/* Coffee */}
-        <CoffeeOrder />
-
-        {/* Summary */}
-        <section className="rounded-2xl bg-ink text-bone p-5 shadow-card animate-fadeUp">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-bone/60">Total</div>
-          <div className="mt-1 flex items-end justify-between">
-            <div className="font-serif text-[44px] leading-none">
-              <AnimatedTotal value={total} />
+            <div>
+              <div className="text-[15px] text-ink font-medium">
+                Grab something on the way out
+              </div>
+              <div className="text-[12px] text-muted mt-0.5">
+                {itemCount === 0
+                  ? "Coffee, pastries — ready in 5 min"
+                  : `${itemCount} item${itemCount === 1 ? "" : "s"} · ready in 5 min`}
+              </div>
             </div>
-          </div>
-          <ul className="mt-4 space-y-1.5 text-sm text-bone/80">
-            <li className="flex justify-between">
-              <span>Room balance</span>
-              <span className="tabular-nums">{formatMoney(outstandingBalance)}</span>
-            </li>
-            <li className="flex justify-between">
-              <span>Late checkout</span>
-              <span className="tabular-nums">
-                {lateCheckoutCharge === 0 ? "—" : formatMoney(lateCheckoutCharge)}
-              </span>
-            </li>
-            <li className="flex justify-between">
-              <span>Coffee &amp; pastries</span>
-              <span className="tabular-nums">
-                {orderSubtotal === 0 ? "—" : formatMoney(orderSubtotal)}
-              </span>
-            </li>
-          </ul>
+            <div className="flex items-center gap-2">
+              {orderSubtotal > 0 && (
+                <span className="text-[13px] tabular-nums text-ink">
+                  {formatMoney(orderSubtotal)}
+                </span>
+              )}
+              <span className="text-muted text-lg leading-none">›</span>
+            </div>
+          </button>
         </section>
       </div>
 
-      {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 flex justify-center pointer-events-none">
-        <div className="w-full max-w-[440px] px-6 pb-6 pt-4 bg-gradient-to-t from-bone via-bone/95 to-bone/0 pointer-events-auto">
+      {/* Sticky pay bar (Apple Pay style) */}
+      <div className="relative z-10 px-5 pb-6 pt-3 bg-white animate-fadeUp">
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
+          <span className="font-serif text-[26px] text-ink tabular-nums">
+            <AnimatedTotal value={total} />
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push(`/room/${roomNumber}/payment`)}
+          disabled={total === 0}
+          className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          {total === 0 ? "Add something to checkout" : "Pay & checkout"}
+        </button>
+      </div>
+
+      {/* Coffee bottom sheet */}
+      <BottomSheet
+        open={coffeeOpen}
+        onClose={() => setCoffeeOpen(false)}
+        title="Grab something on the way out?"
+        footer={
           <button
             type="button"
-            onClick={() => router.push(`/room/${roomNumber}/payment`)}
-            disabled={total === 0}
-            className="w-full rounded-full bg-accent text-white py-4 text-[15px] font-medium tracking-wide shadow-card transition active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={() => setCoffeeOpen(false)}
+            className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99] flex items-center justify-center gap-2"
           >
-            {total === 0 ? "Add something to checkout" : (
-              <span className="inline-flex items-baseline gap-2">
-                <span>Pay &amp; checkout</span>
-                <span className="opacity-80">·</span>
-                <AnimatedTotal value={total} className="font-medium" />
-              </span>
+            <span>Done</span>
+            {orderSubtotal > 0 && (
+              <span className="opacity-70 tabular-nums">· {formatMoney(orderSubtotal)}</span>
             )}
           </button>
-        </div>
-      </div>
+        }
+      >
+        <CoffeeOrder />
+      </BottomSheet>
     </main>
   );
 }

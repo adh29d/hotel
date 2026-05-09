@@ -19,9 +19,9 @@ export default function ReviewCard() {
 
   if (stage === "thanks") {
     return (
-      <section className="rounded-2xl bg-white p-6 shadow-card animate-fadeUp text-center">
-        <div className="font-serif text-2xl text-ink">Thank you.</div>
-        <p className="mt-2 text-sm text-muted leading-relaxed">
+      <section className="rounded-3xl bg-surface p-6 animate-fadeUp text-center">
+        <div className="font-serif text-[22px] text-ink">Thank you.</div>
+        <p className="mt-2 text-[13px] text-muted leading-relaxed">
           We hope to see you again soon.
         </p>
       </section>
@@ -30,22 +30,22 @@ export default function ReviewCard() {
 
   if (stage === "high") {
     return (
-      <section className="rounded-2xl bg-white p-6 shadow-card animate-fadeUp">
-        <div className="font-serif text-xl text-ink">Thank you.</div>
-        <p className="mt-1 text-sm text-muted leading-relaxed">
+      <section className="rounded-3xl bg-surface p-6 animate-fadeUp">
+        <div className="font-serif text-[20px] text-ink">Thank you.</div>
+        <p className="mt-1 text-[13px] text-muted leading-relaxed">
           Would you mind sharing on Google? It helps us enormously.
         </p>
         <button
           type="button"
           onClick={() => setStage("thanks")}
-          className="mt-5 w-full rounded-full bg-accent text-white py-3.5 text-[15px] font-medium tracking-wide transition active:scale-[0.99]"
+          className="mt-5 w-full rounded-2xl bg-ink text-white py-3.5 text-[15px] font-medium tracking-tight transition active:scale-[0.99]"
         >
           Post to Google
         </button>
         <button
           type="button"
           onClick={() => setStage("thanks")}
-          className="mt-2 w-full text-xs text-muted hover:text-ink transition"
+          className="mt-2 w-full text-[12px] text-muted hover:text-ink transition"
         >
           Maybe later
         </button>
@@ -55,9 +55,11 @@ export default function ReviewCard() {
 
   if (stage === "low") {
     return (
-      <section className="rounded-2xl bg-white p-6 shadow-card animate-fadeUp">
-        <div className="font-serif text-xl text-ink">We&rsquo;re sorry your stay didn&rsquo;t meet expectations.</div>
-        <p className="mt-1 text-sm text-muted leading-relaxed">
+      <section className="rounded-3xl bg-surface p-6 animate-fadeUp">
+        <div className="font-serif text-[20px] text-ink leading-snug">
+          We&rsquo;re sorry your stay didn&rsquo;t meet expectations.
+        </div>
+        <p className="mt-1.5 text-[13px] text-muted leading-relaxed">
           Your feedback goes directly to our General Manager — no one else will see it.
         </p>
         <textarea
@@ -65,12 +67,12 @@ export default function ReviewCard() {
           onChange={(e) => setFeedback(e.target.value)}
           rows={4}
           placeholder="Tell us what went wrong…"
-          className="mt-4 w-full rounded-xl border border-line bg-bone/40 p-3 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus:border-ink/40 transition"
+          className="mt-4 w-full rounded-2xl border border-line bg-white p-3 text-[14px] text-ink placeholder:text-muted/70 focus:outline-none focus:border-ink/40 transition"
         />
         <button
           type="button"
           onClick={() => setStage("thanks")}
-          className="mt-4 w-full rounded-full bg-ink text-bone py-3.5 text-[15px] font-medium tracking-wide transition active:scale-[0.99]"
+          className="mt-3 w-full rounded-2xl bg-ink text-white py-3.5 text-[15px] font-medium tracking-tight transition active:scale-[0.99]"
         >
           Send to GM
         </button>
@@ -79,9 +81,9 @@ export default function ReviewCard() {
   }
 
   return (
-    <section className="rounded-2xl bg-white p-6 shadow-card animate-fadeUp">
-      <div className="font-serif text-xl text-ink">How was your stay?</div>
-      <p className="mt-1 text-sm text-muted">A tap is all it takes.</p>
+    <section className="rounded-3xl bg-surface p-6 animate-fadeUp">
+      <div className="font-serif text-[20px] text-ink">How was your stay?</div>
+      <p className="mt-1 text-[13px] text-muted">A tap is all it takes.</p>
       <div className="mt-5 flex justify-between max-w-[260px] mx-auto">
         {[1, 2, 3, 4, 5].map((n) => {
           const filled = (hover || rating) >= n;

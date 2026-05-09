@@ -27,9 +27,7 @@ export default function PaymentPage() {
     initRoom(params.roomNumber);
   }, [params.roomNumber, initRoom]);
 
-  if (!reservation) {
-    return null;
-  }
+  if (!reservation) return null;
 
   const pay = (method: Exclude<Method, null>) => {
     if (processing) return;
@@ -41,57 +39,62 @@ export default function PaymentPage() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <header className="px-6 pt-8 pb-4 flex items-center justify-between animate-fadeUp">
+    <main className="h-[100dvh] flex flex-col bg-white">
+      <header className="px-5 pt-6 pb-2 flex items-center justify-between animate-fadeUp">
         <button
           type="button"
           onClick={() => router.back()}
           disabled={!!processing}
-          className="text-sm text-muted hover:text-ink transition disabled:opacity-40"
+          aria-label="Back"
+          className="h-9 w-9 rounded-full bg-surface flex items-center justify-center text-ink transition active:scale-95 disabled:opacity-40"
         >
-          ← Back
+          <span className="block leading-none -mt-0.5">‹</span>
         </button>
-        <div className="text-xs uppercase tracking-[0.18em] text-muted">Payment</div>
-        <div className="w-10" />
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted">Payment</div>
+        <div className="w-9" />
       </header>
 
-      <section className="px-6 pt-2 animate-fadeUp">
-        <h1 className="font-serif text-3xl text-ink">Confirm &amp; pay</h1>
-        <p className="mt-1.5 text-sm text-muted">
+      <section className="px-6 pt-4 animate-fadeUp">
+        <h1 className="font-serif text-[30px] leading-tight text-ink">Confirm &amp; pay</h1>
+        <p className="mt-1 text-[13px] text-muted">
           Room {reservation.roomNumber} · {reservation.guestFirstName} {reservation.guestLastName}
         </p>
       </section>
 
-      <section className="mx-6 mt-6 rounded-2xl bg-white p-5 shadow-card animate-fadeUp">
-        <ul className="divide-y divide-line text-[15px]">
+      <section className="mx-5 mt-5 rounded-3xl bg-surface p-5 animate-fadeUp">
+        <ul className="divide-y divide-line/80 text-[14px]">
           <li className="flex justify-between py-2.5">
-            <span>Room balance</span>
-            <span className="tabular-nums">{formatMoney(outstandingBalance)}</span>
+            <span className="text-muted">Room balance</span>
+            <span className="tabular-nums text-ink">{formatMoney(outstandingBalance)}</span>
           </li>
           <li className="flex justify-between py-2.5">
-            <span>Late checkout · {lateCheckoutLabel(state.checkoutHour)}</span>
-            <span className="tabular-nums">
+            <span className="text-muted">
+              Late checkout · {lateCheckoutLabel(state.checkoutHour)}
+            </span>
+            <span className="tabular-nums text-ink">
               {lateCheckoutCharge === 0 ? "Included" : formatMoney(lateCheckoutCharge)}
             </span>
           </li>
           <li className="flex justify-between py-2.5">
-            <span>Coffee &amp; pastries</span>
-            <span className="tabular-nums">
+            <span className="text-muted">Coffee &amp; pastries</span>
+            <span className="tabular-nums text-ink">
               {orderSubtotal === 0 ? "—" : formatMoney(orderSubtotal)}
             </span>
           </li>
         </ul>
         <div className="mt-3 pt-3 border-t border-line flex items-baseline justify-between">
-          <span className="text-sm text-muted">Total</span>
-          <span className="font-serif text-3xl text-ink">
+          <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
+          <span className="font-serif text-[28px] text-ink tabular-nums">
             <AnimatedTotal value={total} />
           </span>
         </div>
       </section>
 
-      <section className="px-6 mt-8 space-y-3 animate-fadeUp">
+      <div className="flex-1" />
+
+      <section className="px-5 pb-8 space-y-2.5 animate-fadeUp">
         <PayButton
-          label="Apple Pay"
+          label="Pay"
           onClick={() => pay("apple")}
           state={processing === "apple" ? "loading" : processing ? "disabled" : "idle"}
           variant="dark"
@@ -111,7 +114,7 @@ export default function PaymentPage() {
           variant="outline"
           icon={<CardIcon />}
         />
-        <p className="pt-3 text-center text-[11px] text-muted">
+        <p className="pt-2 text-center text-[11px] text-muted">
           Demo mode · no real payment is processed
         </p>
       </section>
@@ -133,8 +136,8 @@ function PayButton({
   icon: React.ReactNode;
 }) {
   const base =
-    "w-full rounded-full py-4 text-[15px] font-medium tracking-wide flex items-center justify-center gap-2 transition active:scale-[0.99]";
-  const dark = "bg-ink text-bone";
+    "w-full rounded-2xl py-4 text-[15px] font-medium tracking-tight flex items-center justify-center gap-2 transition active:scale-[0.99]";
+  const dark = "bg-ink text-white";
   const outline = "bg-white text-ink border border-line";
   const disabled = state === "disabled" ? "opacity-30 cursor-not-allowed" : "";
   return (

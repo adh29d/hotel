@@ -8,13 +8,13 @@
 
 html,
 body {
-  background: #F7F4EF;
-  color: #1B1B1B;
+  background: #ffffff;
+  color: #1d1d1f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
 }
 
-/* Slider styling — same look across browsers */
 input[type="range"].rms-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -26,31 +26,31 @@ input[type="range"].rms-slider {
 
 input[type="range"].rms-slider::-webkit-slider-runnable-track {
   height: 4px;
-  background: #E7E1D7;
+  background: #E5E5EA;
   border-radius: 999px;
 }
 
 input[type="range"].rms-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: #1F4D3C;
-  border: 3px solid #F7F4EF;
-  box-shadow: 0 2px 8px rgba(31, 77, 60, 0.25);
-  margin-top: -11px;
+  background: #ffffff;
+  border: 1px solid #E5E5EA;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+  margin-top: -10px;
   cursor: pointer;
   transition: transform 120ms ease;
 }
 
 input[type="range"].rms-slider:active::-webkit-slider-thumb {
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 input[type="range"].rms-slider::-moz-range-track {
   height: 4px;
-  background: #E7E1D7;
+  background: #E5E5EA;
   border-radius: 999px;
 }
 
@@ -58,12 +58,11 @@ input[type="range"].rms-slider::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #1F4D3C;
-  border: 3px solid #F7F4EF;
+  background: #ffffff;
+  border: 1px solid #E5E5EA;
   cursor: pointer;
 }
 
-/* No tap highlight on iOS */
 button,
 a {
   -webkit-tap-highlight-color: transparent;
@@ -71,4 +70,12 @@ a {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbars on the bottom sheet for a cleaner feel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
 }

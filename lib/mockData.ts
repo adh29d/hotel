@@ -73,6 +73,14 @@ export const milks: Milk[] = [
 // ---------- Pickup ----------
 export const pickupLocation = "Pelicans Breakfast Restaurant";
 
+// ---------- Live weather (mocked for demo) ----------
+export type WeatherCondition = "sunny" | "cloudy" | "rain" | "night";
+export const currentWeather: { tempC: number; label: string; condition: WeatherCondition } = {
+  tempC: 22,
+  label: "Sunny",
+  condition: "sunny",
+};
+
 // Presets shown as quick chips. Default is the first entry.
 export const pickupPresetMinutes = [5, 15, 30, 60] as const;
 export type PickupPreset = (typeof pickupPresetMinutes)[number];

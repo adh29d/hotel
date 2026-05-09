@@ -6,9 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
 import {
+  currentWeather,
   formatMoney,
   formatTime,
-  lateCheckoutLabel,
   pickupLocation,
   resolvePickupTime,
 } from "@/lib/mockData";
@@ -75,7 +75,7 @@ export default function RoomLandingPage() {
 
   // Header subtitle adapts to whether today is their checkout day.
   const subtitle = isCheckoutDay
-    ? `Room ${reservation.roomNumber} · ${reservation.checkOutDate} · checkout ${lateCheckoutLabel(state.checkoutHour)}`
+    ? `Room ${reservation.roomNumber} · Checking out today`
     : `Room ${reservation.roomNumber} · Checking out ${reservation.checkOutDate}`;
 
   const ctaLabel = total === 0 ? "Nothing to pay" : "Pay balance";
@@ -109,6 +109,14 @@ export default function RoomLandingPage() {
         >
           {subtitle}
         </p>
+        <div className="mt-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white tracking-tight">
+            <WeatherIcon condition={currentWeather.condition} />
+            <span className="tabular-nums">
+              Outside right now · {currentWeather.tempC}° · {currentWeather.label}
+            </span>
+          </span>
+        </div>
       </header>
 
       <div className="flex-1" />
@@ -120,7 +128,7 @@ export default function RoomLandingPage() {
             <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
               {allPaid ? "Stay paid" : "Outstanding"}
             </div>
-            <div className="mt-1 font-serif text-[36px] leading-none text-ink tabular-nums">
+            <div className="mt-1 text-[36px] font-medium leading-none text-ink tabular-nums tracking-tight">
               {allPaid ? "$0" : formatMoney(outstandingBalance)}
             </div>
             {!allPaid && reservation.charges.length > 0 && (
@@ -182,7 +190,7 @@ export default function RoomLandingPage() {
       <div className="relative z-10 px-5 pb-6 pt-3 bg-white animate-fadeUp">
         <div className="flex items-baseline justify-between mb-3 px-1">
           <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
-          <span className="font-serif text-[26px] text-ink tabular-nums">
+          <span className="text-[26px] font-medium text-ink tabular-nums tracking-tight">
             <AnimatedTotal value={total} />
           </span>
         </div>
@@ -224,4 +232,60 @@ function greetingPrefix(now: Date): string {
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function WeatherIcon({ condition }: { condition: "sunny" | "cloudy" | "rain" | "night" }) {
+  const stroke = "currentColor";
+  if (condition === "cloudy") {
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 11.1 4 4 0 0 0 7 18Z"
+          stroke={stroke}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (condition === "rain") {
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M7 14h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 7.1 4 4 0 0 0 7 14Z"
+          stroke={stroke}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        <path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (condition === "night") {
+    return (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path
+          d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"
+          stroke={stroke}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="3.6" fill={stroke} />
+      <g stroke={stroke} strokeWidth="1.6" strokeLinecap="round">
+        <path d="M12 3v2" />
+        <path d="M12 19v2" />
+        <path d="M3 12h2" />
+        <path d="M19 12h2" />
+        <path d="M5.4 5.4 6.8 6.8" />
+        <path d="M17.2 17.2 18.6 18.6" />
+        <path d="M5.4 18.6 6.8 17.2" />
+        <path d="M17.2 6.8 18.6 5.4" />
+      </g>
+    </svg>
+  );
 }

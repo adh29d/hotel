@@ -84,7 +84,7 @@ export default function PaymentPage() {
         </ul>
         <div className="mt-3 pt-3 border-t border-line flex items-baseline justify-between">
           <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
-          <span className="font-serif text-[28px] text-ink tabular-nums">
+          <span className="text-[28px] font-medium text-ink tabular-nums tracking-tight">
             <AnimatedTotal value={total} />
           </span>
         </div>

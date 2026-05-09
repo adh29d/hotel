@@ -60,7 +60,7 @@ const defaultState: OrderState = {
   roomNumber: null,
   checkoutHour: 10,
   coffeeLines: [],
-  pickup: { kind: "preset", minutes: 5 },
+  pickup: { kind: "preset", minutes: 10 },
   paid: false,
   checkedOut: false,
 };

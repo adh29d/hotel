@@ -5,7 +5,6 @@ import {
   coffees,
   formatMoney,
   formatTime,
-  kitchenHours,
   milks,
   pickupLocation,
   pickupPresetMinutes,
@@ -14,6 +13,12 @@ import {
   sweeteners,
   syrups,
 } from "@/lib/mockData";
+
+const PICKUP_LATEST = "14:00";
+
+function toTimeStr(d: Date): string {
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
 import { useOrder } from "@/lib/OrderContext";
 import QuantityStepper from "./QuantityStepper";
 
@@ -46,7 +51,7 @@ export default function CoffeeOrder() {
         <div className="text-[11px] uppercase tracking-[0.14em] text-muted">Pickup</div>
         <div className="mt-1 text-[14px] text-ink leading-snug">
           {pickupLocation} ·{" "}
-          <span className="font-medium tabular-nums">by {formatTime(pickupAt)}</span>
+          <span className="font-medium tabular-nums">at {formatTime(pickupAt)}</span>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -73,19 +78,16 @@ export default function CoffeeOrder() {
         </div>
 
         {state.pickup.kind === "custom" && (
-          <div className="mt-3 flex items-center gap-2 animate-fadeUp">
+          <div className="mt-3 animate-fadeUp">
             <input
               type="time"
               value={state.pickup.time}
-              min={kitchenHours.open}
-              max={kitchenHours.close}
+              min={toTimeStr(now)}
+              max={PICKUP_LATEST}
               step={300}
               onChange={(e) => setPickupCustom(e.target.value)}
               className="rounded-xl bg-white border border-line px-3 py-2 text-[14px] text-ink tabular-nums focus:outline-none focus:border-ink/40"
             />
-            <span className="text-[11px] text-muted">
-              Kitchen hours {kitchenHours.open}–{kitchenHours.close}
-            </span>
           </div>
         )}
       </div>

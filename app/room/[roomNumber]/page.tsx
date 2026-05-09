@@ -6,15 +6,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
 import {
-  coffees,
   formatMoney,
   formatTime,
-  lateCheckoutLabel,
-  milks,
   pickupLocation,
   resolvePickupTime,
-  sweeteners,
-  syrups,
 } from "@/lib/mockData";
 import {
   fallbackWeather,
@@ -47,7 +42,6 @@ export default function RoomLandingPage() {
     setCheckoutHour,
     outstandingBalance,
     coffeeSubtotal,
-    lateCheckoutCharge,
     total,
     markCheckedOut,
   } = useOrder();
@@ -103,7 +97,6 @@ export default function RoomLandingPage() {
 
   const allPaid = reservation.alreadyPaid;
   const isCheckoutDay = reservation.isCheckoutToday;
-  const hasLate = state.checkoutHour > 10;
   const hasOrder = state.coffeeLines.length > 0;
 
   const subtitle = isCheckoutDay
@@ -176,90 +169,43 @@ export default function RoomLandingPage() {
         {Hero("h-[40%]")}
 
         <div className="relative z-10 px-5 pb-8 space-y-3 animate-fadeUp">
-          {/* Payment summary */}
-          <section className="rounded-3xl bg-surface p-5">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft text-accent px-3 py-1 text-[11px] font-medium tracking-tight">
-                <CheckIcon /> Payment received
-              </span>
-              <span className="text-[12px] text-muted tabular-nums">
-                {formatMoney(total)}
-              </span>
-            </div>
-
-            <ul className="mt-4 divide-y divide-line/70 text-[13px]">
-              {!reservation.alreadyPaid &&
-                reservation.charges.map((c) => (
-                  <li key={c.label} className="flex justify-between py-1.5">
-                    <span className="text-muted">{c.label}</span>
-                    <span className="tabular-nums text-ink">
-                      {formatMoney(c.amount)}
-                    </span>
-                  </li>
-                ))}
-              {hasLate && (
-                <li className="flex justify-between py-1.5">
-                  <span className="text-muted">
-                    Late checkout · {lateCheckoutLabel(state.checkoutHour)}
-                  </span>
-                  <span className="tabular-nums text-ink">
-                    {formatMoney(lateCheckoutCharge)}
-                  </span>
-                </li>
-              )}
-              {state.coffeeLines.map((line) => {
-                const c = coffees.find((x) => x.id === line.coffeeId)!;
-                const m = milks.find((x) => x.id === line.milkId)!;
-                const sy = syrups.find((x) => x.id === line.syrupId)!;
-                const sw = sweeteners.find((x) => x.id === line.sweetenerId)!;
-                const lineTotal =
-                  (c.price + m.surcharge + sy.surcharge + sw.surcharge) *
-                  line.qty;
-                const extras = [
-                  m.surcharge > 0 ? m.name : null,
-                  sy.id !== "none" ? sy.name : null,
-                  sw.id !== "none" ? sw.name : null,
-                ].filter(Boolean);
-                return (
-                  <li
-                    key={line.id}
-                    className="flex justify-between py-1.5"
-                  >
-                    <span className="text-muted">
-                      {line.qty}× {c.name}
-                      {extras.length > 0 ? ` · ${extras.join(" · ")}` : ""}
-                    </span>
-                    <span className="tabular-nums text-ink">
-                      {formatMoney(lineTotal)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            {hasOrder && (
-              <p className="mt-3 text-[12px] text-muted leading-relaxed">
-                Your coffee will be ready at {pickupLocation} by{" "}
-                <span className="text-ink tabular-nums">
-                  {formatTime(pickupAt)}
-                </span>
-                .
-              </p>
-            )}
+          {/* Payment received — pill + balance only */}
+          <section className="rounded-3xl bg-surface p-5 flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft text-accent px-3 py-1 text-[11px] font-medium tracking-tight">
+              <CheckIcon /> Payment received
+            </span>
+            <span className="text-[20px] font-medium text-ink tabular-nums tracking-tight">
+              {formatMoney(total)}
+            </span>
           </section>
+
+          {(hasOrder || isCheckoutDay) && (
+            <section className="rounded-3xl bg-surface p-5">
+              {isCheckoutDay && (
+                <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
+                  Before you go
+                </div>
+              )}
+              <ul
+                className={`${isCheckoutDay ? "mt-2" : ""} space-y-1.5 text-[14px] text-ink leading-relaxed`}
+              >
+                {hasOrder && (
+                  <li>
+                    Your coffee will be ready at {pickupLocation} at{" "}
+                    <span className="font-medium tabular-nums">
+                      {formatTime(pickupAt)}
+                    </span>
+                    .
+                  </li>
+                )}
+                {isCheckoutDay && <li>{KEY_DROP_NOTE}</li>}
+              </ul>
+            </section>
+          )}
 
           {isCheckoutDay ? (
             <>
               <ReviewCard />
-
-              <section className="rounded-3xl bg-surface p-5">
-                <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
-                  Leaving the room
-                </div>
-                <p className="mt-1.5 text-[14px] text-ink leading-relaxed">
-                  {KEY_DROP_NOTE}
-                </p>
-              </section>
 
               {state.checkedOut ? (
                 <div className="w-full rounded-2xl bg-accent-soft text-accent py-4 text-[15px] font-medium tracking-tight flex items-center justify-center gap-2 animate-fadeUp">
@@ -358,7 +304,7 @@ export default function RoomLandingPage() {
               <div className="text-[12px] text-muted mt-0.5">
                 {itemCount === 0
                   ? `${pickupLocation} · pick a time`
-                  : `${itemCount} coffee${itemCount === 1 ? "" : "s"} · by ${formatTime(pickupAt)}`}
+                  : `${itemCount} coffee${itemCount === 1 ? "" : "s"} · at ${formatTime(pickupAt)}`}
               </div>
             </div>
             <div className="flex items-center gap-2">

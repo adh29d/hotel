@@ -31,9 +31,9 @@ export default function ReviewCard() {
   if (stage === "high") {
     return (
       <section className="rounded-3xl bg-surface p-6 animate-fadeUp">
-        <div className="font-serif text-[20px] text-ink">Thank you.</div>
+        <div className="font-serif text-[20px] text-ink">Thank you!</div>
         <p className="mt-1 text-[13px] text-muted leading-relaxed">
-          Would you mind sharing on Google? It helps us enormously.
+          Would you mind sharing on Google? This really helps us out!
         </p>
         <button
           type="button"
@@ -57,16 +57,16 @@ export default function ReviewCard() {
     return (
       <section className="rounded-3xl bg-surface p-6 animate-fadeUp">
         <div className="font-serif text-[20px] text-ink leading-snug">
-          We&rsquo;re sorry your stay didn&rsquo;t meet expectations.
+          Please let us know how we could have improved.
         </div>
         <p className="mt-1.5 text-[13px] text-muted leading-relaxed">
-          Your feedback goes directly to our General Manager — no one else will see it.
+          Your message goes directly to our General Manager.
         </p>
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           rows={4}
-          placeholder="Tell us what went wrong…"
+          placeholder="Tell us what we could do better…"
           className="mt-4 w-full rounded-2xl border border-line bg-white p-3 text-[14px] text-ink placeholder:text-muted/70 focus:outline-none focus:border-ink/40 transition"
         />
         <button

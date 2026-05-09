@@ -23,12 +23,12 @@ export default function ConfirmationPage() {
     initRoom,
     reservation,
     state,
-    outstandingBalance,
-    lateCheckoutCharge,
     coffeeSubtotal,
+    lateCheckoutCharge,
     total,
   } = useOrder();
   const [pickupTime, setPickupTime] = useState<string>("");
+  const [checkedOut, setCheckedOut] = useState(false);
 
   useEffect(() => {
     initRoom(params.roomNumber);
@@ -41,8 +41,7 @@ export default function ConfirmationPage() {
   const hasOrder = state.coffeeLines.length > 0;
   const hasLate = state.checkoutHour > 10;
 
-  const message = useMemo(() => {
-    if (!reservation) return "";
+  const checkedOutMessage = useMemo(() => {
     const parts: string[] = [];
     if (hasLate) {
       parts.push(`Checkout extended to ${lateCheckoutLabel(state.checkoutHour)}.`);
@@ -52,45 +51,85 @@ export default function ConfirmationPage() {
         `Your coffee will be ready at ${pickupLocation} by ${pickupTime}.`,
       );
     }
-    parts.push("Just drop your keys when you're done.");
     return parts.join(" ");
-  }, [reservation, hasLate, hasOrder, pickupTime, state.checkoutHour]);
+  }, [hasLate, hasOrder, pickupTime, state.checkoutHour]);
+
+  const keyMessage = hasOrder
+    ? `Drop your keys with the team at ${pickupLocation} when you grab your coffee, or in the express checkout box next to reception.`
+    : "Drop your keys in the express checkout box next to reception.";
 
   if (!reservation) return null;
 
+  // ---------- Stage 2: actually checked out ----------
+  if (checkedOut) {
+    return (
+      <main className="px-5 pt-12 pb-12">
+        <div className="text-center animate-fadeUp">
+          <SuccessTick />
+          <h1 className="mt-6 font-serif text-[30px] leading-tight text-ink">
+            You&rsquo;re checked out.
+          </h1>
+          {checkedOutMessage && (
+            <p className="mt-2.5 text-[14px] text-muted leading-relaxed max-w-[320px] mx-auto">
+              {checkedOutMessage}
+            </p>
+          )}
+          <p className="mt-3 text-[14px] text-ink leading-relaxed max-w-[320px] mx-auto">
+            {keyMessage}
+          </p>
+        </div>
+
+        <div className="mt-8">
+          <ReviewCard />
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/"
+            className="text-[11px] text-muted hover:text-ink underline underline-offset-4"
+          >
+            Restart demo
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  // ---------- Stage 1: paid, awaiting tap-to-check-out ----------
   return (
-    <main className="px-5 pt-12 pb-12">
+    <main className="px-5 pt-14 pb-10 flex flex-col min-h-[100dvh]">
       <div className="text-center animate-fadeUp">
-        <SuccessTick />
-        <h1 className="mt-6 font-serif text-[30px] leading-tight text-ink">
-          You&rsquo;re checked out.
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft text-accent px-3 py-1.5 text-[11px] font-medium tracking-tight">
+          <CheckIcon /> Payment received
+        </span>
+        <h1 className="mt-5 font-serif text-[26px] leading-tight text-ink">
+          One last tap, {reservation.guestFirstName}.
         </h1>
-        <p className="mt-2.5 text-[14px] text-muted leading-relaxed max-w-[320px] mx-auto">
-          {message}
+        <p className="mt-1.5 text-[13px] text-muted">
+          Confirm your check-out below.
         </p>
       </div>
 
-      <section className="mt-8 rounded-3xl bg-surface p-5 animate-fadeUp">
-        <div className="flex items-baseline justify-between">
-          <h2 className="font-serif text-[18px] text-ink">Receipt</h2>
-          <span className="text-[11px] text-muted">
-            Room {reservation.roomNumber} · {reservation.guestFirstName}
+      {/* Compact receipt — only items actually ordered */}
+      <section className="mt-6 rounded-2xl bg-surface p-4 animate-fadeUp text-[13px]">
+        <div className="flex items-baseline justify-between mb-2.5">
+          <span className="font-serif text-[15px] text-ink">Receipt</span>
+          <span className="text-[10px] text-muted uppercase tracking-[0.14em] tabular-nums">
+            Room {reservation.roomNumber}
           </span>
         </div>
 
-        <ul className="mt-3 divide-y divide-line/80 text-[14px]">
-          {reservation.charges.length > 0 && !reservation.alreadyPaid && (
-            <>
-              {reservation.charges.map((c) => (
-                <li key={c.label} className="flex justify-between py-2">
-                  <span className="text-muted">{c.label}</span>
-                  <span className="tabular-nums text-ink">{formatMoney(c.amount)}</span>
-                </li>
-              ))}
-            </>
-          )}
+        <ul className="divide-y divide-line/70">
+          {!reservation.alreadyPaid &&
+            reservation.charges.map((c) => (
+              <li key={c.label} className="flex justify-between py-1.5">
+                <span className="text-muted">{c.label}</span>
+                <span className="tabular-nums text-ink">{formatMoney(c.amount)}</span>
+              </li>
+            ))}
+
           {hasLate && (
-            <li className="flex justify-between py-2">
+            <li className="flex justify-between py-1.5">
               <span className="text-muted">
                 Late checkout · {lateCheckoutLabel(state.checkoutHour)}
               </span>
@@ -103,7 +142,7 @@ export default function ConfirmationPage() {
             const m = milks.find((x) => x.id === line.milkId)!;
             const lineTotal = (c.price + m.surcharge) * line.qty;
             return (
-              <li key={line.id} className="flex justify-between py-2">
+              <li key={line.id} className="flex justify-between py-1.5">
                 <span className="text-muted">
                   {line.qty}× {c.name}
                   {m.surcharge > 0 ? ` · ${m.name}` : ""}
@@ -114,44 +153,35 @@ export default function ConfirmationPage() {
           })}
         </ul>
 
-        <div className="mt-3 pt-3 border-t border-line space-y-1 text-[13px] text-muted">
-          <Row label="Room" value={formatMoney(outstandingBalance)} />
-          <Row
-            label="Late checkout"
-            value={lateCheckoutCharge === 0 ? "—" : formatMoney(lateCheckoutCharge)}
-          />
-          <Row
-            label="Coffee order"
-            value={coffeeSubtotal === 0 ? "—" : formatMoney(coffeeSubtotal)}
-          />
-        </div>
-        <div className="mt-3 pt-3 border-t border-line flex justify-between items-baseline">
-          <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Paid</span>
-          <span className="font-serif text-[24px] text-ink tabular-nums">{formatMoney(total)}</span>
+        <div className="flex justify-between pt-2.5 mt-2 border-t border-line">
+          <span className="text-muted text-[10px] uppercase tracking-[0.14em]">Paid</span>
+          <span className="font-medium text-ink tabular-nums">{formatMoney(total)}</span>
         </div>
       </section>
 
-      <div className="mt-5">
-        <ReviewCard />
-      </div>
+      <div className="flex-1" />
 
-      <div className="mt-8 text-center">
-        <Link
-          href="/"
-          className="text-[11px] text-muted hover:text-ink underline underline-offset-4"
-        >
-          Restart demo
-        </Link>
-      </div>
+      <button
+        type="button"
+        onClick={() => setCheckedOut(true)}
+        className="mt-8 w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99]"
+      >
+        Tap to check out
+      </button>
     </main>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function CheckIcon() {
   return (
-    <div className="flex justify-between">
-      <span>{label}</span>
-      <span className="tabular-nums">{value}</span>
-    </div>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 12.5l4.5 4.5L19 7.5"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

@@ -167,7 +167,7 @@ export default function RoomLandingPage() {
           disabled={total === 0}
           className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          {total === 0 ? "Add something to checkout" : "Pay & checkout"}
+          {total === 0 ? "Add something to checkout" : "Pay balance"}
         </button>
       </div>
 

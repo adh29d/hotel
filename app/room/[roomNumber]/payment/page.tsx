@@ -34,7 +34,7 @@ export default function PaymentPage() {
     setProcessing(method);
     setTimeout(() => {
       markPaid();
-      router.push(`/room/${params.roomNumber}/confirmation`);
+      router.push(`/room/${params.roomNumber}`);
     }, 2000);
   };
 

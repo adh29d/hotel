@@ -6,10 +6,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
 import {
+  coffees,
   formatMoney,
   formatTime,
+  lateCheckoutLabel,
+  milks,
   pickupLocation,
   resolvePickupTime,
+  sweeteners,
+  syrups,
 } from "@/lib/mockData";
 import {
   fallbackWeather,
@@ -22,9 +27,13 @@ import CoffeeOrder from "@/components/CoffeeOrder";
 import AnimatedTotal from "@/components/AnimatedTotal";
 import BottomSheet from "@/components/BottomSheet";
 import InvoiceRequestModal from "@/components/InvoiceRequestModal";
+import ReviewCard from "@/components/ReviewCard";
 
 const HERO_SRC =
   "https://beachcomberhotelandresort.com.au/wp-content/uploads/2022/09/Pelicans-Breakfast-417b.jpg";
+
+const KEY_DROP_NOTE =
+  "Drop your keys in the express checkout box next to reception.";
 
 export default function RoomLandingPage() {
   const params = useParams<{ roomNumber: string }>();
@@ -32,12 +41,15 @@ export default function RoomLandingPage() {
   const roomNumber = params.roomNumber;
   const {
     initRoom,
+    resetOrder,
     reservation,
     state,
     setCheckoutHour,
     outstandingBalance,
     coffeeSubtotal,
+    lateCheckoutCharge,
     total,
+    markCheckedOut,
   } = useOrder();
   const [coffeeOpen, setCoffeeOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
@@ -52,7 +64,6 @@ export default function RoomLandingPage() {
     [state.coffeeLines],
   );
 
-  // Live clock so the entry-row pickup time stays accurate.
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -63,8 +74,6 @@ export default function RoomLandingPage() {
     [state.pickup, now],
   );
 
-  // Live Toukley weather (Open-Meteo, no auth). Falls back to a static
-  // sunny default if the request fails or hasn't returned yet.
   const [weather, setWeather] = useState<LiveWeather>(fallbackWeather);
   useEffect(() => {
     let cancelled = false;
@@ -72,9 +81,7 @@ export default function RoomLandingPage() {
       .then((w) => {
         if (!cancelled) setWeather(w);
       })
-      .catch(() => {
-        /* keep fallback */
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -96,16 +103,24 @@ export default function RoomLandingPage() {
 
   const allPaid = reservation.alreadyPaid;
   const isCheckoutDay = reservation.isCheckoutToday;
+  const hasLate = state.checkoutHour > 10;
+  const hasOrder = state.coffeeLines.length > 0;
 
   const subtitle = isCheckoutDay
     ? `Room ${reservation.roomNumber} · Checking out today`
     : `Room ${reservation.roomNumber} · Checking out ${reservation.checkOutDate}`;
 
-  const ctaLabel = total === 0 ? "Nothing to pay" : "Pay balance";
+  const restart = () => {
+    resetOrder();
+    router.push("/");
+  };
 
-  return (
-    <main className="relative h-[100dvh] flex flex-col overflow-hidden">
-      <div className="absolute inset-x-0 top-0 h-[58%] -z-0 overflow-hidden">
+  // ---------- Hero (shared across paid + unpaid) ----------
+  const Hero = (heroHeight: string) => (
+    <>
+      <div
+        className={`absolute inset-x-0 top-0 ${heroHeight} -z-0 overflow-hidden`}
+      >
         <Image
           src={HERO_SRC}
           alt=""
@@ -151,6 +166,146 @@ export default function RoomLandingPage() {
           </span>
         </p>
       </header>
+    </>
+  );
+
+  // ============ Paid state ============
+  if (state.paid) {
+    return (
+      <main className="relative min-h-[100dvh] flex flex-col">
+        {Hero("h-[40%]")}
+
+        <div className="relative z-10 px-5 pb-8 space-y-3 animate-fadeUp">
+          {/* Payment summary */}
+          <section className="rounded-3xl bg-surface p-5">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft text-accent px-3 py-1 text-[11px] font-medium tracking-tight">
+                <CheckIcon /> Payment received
+              </span>
+              <span className="text-[12px] text-muted tabular-nums">
+                {formatMoney(total)}
+              </span>
+            </div>
+
+            <ul className="mt-4 divide-y divide-line/70 text-[13px]">
+              {!reservation.alreadyPaid &&
+                reservation.charges.map((c) => (
+                  <li key={c.label} className="flex justify-between py-1.5">
+                    <span className="text-muted">{c.label}</span>
+                    <span className="tabular-nums text-ink">
+                      {formatMoney(c.amount)}
+                    </span>
+                  </li>
+                ))}
+              {hasLate && (
+                <li className="flex justify-between py-1.5">
+                  <span className="text-muted">
+                    Late checkout · {lateCheckoutLabel(state.checkoutHour)}
+                  </span>
+                  <span className="tabular-nums text-ink">
+                    {formatMoney(lateCheckoutCharge)}
+                  </span>
+                </li>
+              )}
+              {state.coffeeLines.map((line) => {
+                const c = coffees.find((x) => x.id === line.coffeeId)!;
+                const m = milks.find((x) => x.id === line.milkId)!;
+                const sy = syrups.find((x) => x.id === line.syrupId)!;
+                const sw = sweeteners.find((x) => x.id === line.sweetenerId)!;
+                const lineTotal =
+                  (c.price + m.surcharge + sy.surcharge + sw.surcharge) *
+                  line.qty;
+                const extras = [
+                  m.surcharge > 0 ? m.name : null,
+                  sy.id !== "none" ? sy.name : null,
+                  sw.id !== "none" ? sw.name : null,
+                ].filter(Boolean);
+                return (
+                  <li
+                    key={line.id}
+                    className="flex justify-between py-1.5"
+                  >
+                    <span className="text-muted">
+                      {line.qty}× {c.name}
+                      {extras.length > 0 ? ` · ${extras.join(" · ")}` : ""}
+                    </span>
+                    <span className="tabular-nums text-ink">
+                      {formatMoney(lineTotal)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {hasOrder && (
+              <p className="mt-3 text-[12px] text-muted leading-relaxed">
+                Your coffee will be ready at {pickupLocation} by{" "}
+                <span className="text-ink tabular-nums">
+                  {formatTime(pickupAt)}
+                </span>
+                .
+              </p>
+            )}
+          </section>
+
+          {isCheckoutDay ? (
+            <>
+              <ReviewCard />
+
+              <section className="rounded-3xl bg-surface p-5">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
+                  Leaving the room
+                </div>
+                <p className="mt-1.5 text-[14px] text-ink leading-relaxed">
+                  {KEY_DROP_NOTE}
+                </p>
+              </section>
+
+              {state.checkedOut ? (
+                <div className="w-full rounded-2xl bg-accent-soft text-accent py-4 text-[15px] font-medium tracking-tight flex items-center justify-center gap-2 animate-fadeUp">
+                  <CheckIcon /> Checked out · see you next time
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={markCheckedOut}
+                  className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99]"
+                >
+                  Tap to check out
+                </button>
+              )}
+            </>
+          ) : (
+            <section className="rounded-3xl bg-surface p-5">
+              <div className="font-serif text-[20px] text-ink">
+                All settled, {reservation.guestFirstName}.
+              </div>
+              <p className="mt-1.5 text-[13px] text-muted leading-relaxed">
+                Your balance is clear. Have a wonderful stay.
+              </p>
+            </section>
+          )}
+
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={restart}
+              className="text-[11px] text-muted hover:text-ink underline underline-offset-4"
+            >
+              Restart demo
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ============ Unpaid state ============
+  const ctaLabel = total === 0 ? "Nothing to pay" : "Pay balance";
+
+  return (
+    <main className="relative h-[100dvh] flex flex-col overflow-hidden">
+      {Hero("h-[58%]")}
 
       <div className="flex-1" />
 
@@ -274,6 +429,20 @@ function greetingPrefix(now: Date): string {
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
   return "Good evening";
+}
+
+function CheckIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 12.5l4.5 4.5L19 7.5"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function WeatherIcon({ condition }: { condition: WeatherCondition }) {

@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
-import { formatMoney, lateCheckoutLabel, pickupLocation } from "@/lib/mockData";
+import {
+  formatMoney,
+  formatTime,
+  lateCheckoutLabel,
+  pickupLocation,
+  resolvePickupTime,
+} from "@/lib/mockData";
 import LateCheckoutSlider from "@/components/LateCheckoutSlider";
 import CoffeeOrder from "@/components/CoffeeOrder";
 import AnimatedTotal from "@/components/AnimatedTotal";
@@ -39,6 +45,17 @@ export default function RoomLandingPage() {
     [state.coffeeLines],
   );
 
+  // Live clock so the entry-row pickup time stays accurate.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const pickupAt = useMemo(
+    () => resolvePickupTime(state.pickup, now),
+    [state.pickup, now],
+  );
+
   if (!reservation) {
     return (
       <main className="px-6 py-12 animate-fadeIn">
@@ -54,10 +71,17 @@ export default function RoomLandingPage() {
   }
 
   const allPaid = reservation.alreadyPaid;
+  const isCheckoutDay = reservation.isCheckoutToday;
+
+  // Header subtitle adapts to whether today is their checkout day.
+  const subtitle = isCheckoutDay
+    ? `Room ${reservation.roomNumber} · ${reservation.checkOutDate} · checkout ${lateCheckoutLabel(state.checkoutHour)}`
+    : `Room ${reservation.roomNumber} · Checking out ${reservation.checkOutDate}`;
+
+  const ctaLabel = total === 0 ? "Nothing to pay" : "Pay balance";
 
   return (
     <main className="relative h-[100dvh] flex flex-col overflow-hidden">
-      {/* Hero image — fades to white at the bottom */}
       <div className="absolute inset-x-0 top-0 h-[58%] -z-0 overflow-hidden">
         <Image
           src={HERO_SRC}
@@ -70,13 +94,12 @@ export default function RoomLandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/0 to-white" />
       </div>
 
-      {/* Greeting + meta — white over the hero */}
       <header className="relative z-10 px-6 pt-14 pb-4 animate-fadeUp">
         <h1
           className="font-serif text-[36px] leading-[1.05] text-white"
           style={{ textShadow: "0 1px 12px rgba(0,0,0,0.35)" }}
         >
-          Good morning,
+          {greetingPrefix(now)},
           <br />
           {reservation.guestFirstName}.
         </h1>
@@ -84,14 +107,12 @@ export default function RoomLandingPage() {
           className="mt-3 text-[13px] text-white/95 tracking-tight"
           style={{ textShadow: "0 1px 8px rgba(0,0,0,0.45)" }}
         >
-          Room {reservation.roomNumber} · {reservation.checkOutDate} · checkout{" "}
-          {lateCheckoutLabel(state.checkoutHour)}
+          {subtitle}
         </p>
       </header>
 
       <div className="flex-1" />
 
-      {/* Combined card */}
       <div className="relative z-10 px-5 animate-fadeUp">
         <section className="rounded-3xl bg-surface p-5">
           {/* Single price — balance only */}
@@ -116,12 +137,15 @@ export default function RoomLandingPage() {
             )}
           </div>
 
-          <div className="my-4 h-px bg-line" />
-
-          <LateCheckoutSlider
-            hour={state.checkoutHour}
-            onHourChange={setCheckoutHour}
-          />
+          {isCheckoutDay && (
+            <>
+              <div className="my-4 h-px bg-line" />
+              <LateCheckoutSlider
+                hour={state.checkoutHour}
+                onHourChange={setCheckoutHour}
+              />
+            </>
+          )}
 
           <div className="my-4 h-px bg-line" />
 
@@ -133,12 +157,14 @@ export default function RoomLandingPage() {
           >
             <div>
               <div className="text-[15px] text-ink font-medium">
-                Grab a coffee on the way out
+                {isCheckoutDay
+                  ? "Grab a coffee on the way out"
+                  : "Order a coffee from Pelicans"}
               </div>
               <div className="text-[12px] text-muted mt-0.5">
                 {itemCount === 0
-                  ? `Ready at ${pickupLocation} in 5 min`
-                  : `${itemCount} coffee${itemCount === 1 ? "" : "s"} · ready at ${pickupLocation}`}
+                  ? `${pickupLocation} · pick a time`
+                  : `${itemCount} coffee${itemCount === 1 ? "" : "s"} · by ${formatTime(pickupAt)}`}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -153,7 +179,6 @@ export default function RoomLandingPage() {
         </section>
       </div>
 
-      {/* Sticky pay bar */}
       <div className="relative z-10 px-5 pb-6 pt-3 bg-white animate-fadeUp">
         <div className="flex items-baseline justify-between mb-3 px-1">
           <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
@@ -167,15 +192,14 @@ export default function RoomLandingPage() {
           disabled={total === 0}
           className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99] disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          {total === 0 ? "Add something to checkout" : "Pay balance"}
+          {ctaLabel}
         </button>
       </div>
 
-      {/* Coffee bottom sheet */}
       <BottomSheet
         open={coffeeOpen}
         onClose={() => setCoffeeOpen(false)}
-        title="Grab a coffee on the way out?"
+        title={isCheckoutDay ? "Coffee on the way out?" : "Order a coffee"}
         footer={
           <button
             type="button"
@@ -193,4 +217,11 @@ export default function RoomLandingPage() {
       </BottomSheet>
     </main>
   );
+}
+
+function greetingPrefix(now: Date): string {
+  const h = now.getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }

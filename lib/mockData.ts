@@ -13,6 +13,9 @@ export type Reservation = {
   checkOutDate: string; // human readable, e.g. "Sat 10 May"
   charges: Charge[];
   alreadyPaid: boolean;
+  // Drives whether the late checkout slider + tap-to-check-out flow appear.
+  // Flip to false to demo the mid-stay "just settle incidentals" path.
+  isCheckoutToday: boolean;
 };
 
 export const DEMO_ROOM = "204";
@@ -26,6 +29,7 @@ export const reservations: Record<string, Reservation> = {
     checkOutDate: "Sat 10 May",
     charges: [{ label: "Restaurant", amount: 87 }],
     alreadyPaid: false,
+    isCheckoutToday: true,
   },
 };
 
@@ -66,8 +70,47 @@ export const milks: Milk[] = [
   { id: "soy", name: "Soy", surcharge: 0.8 },
 ];
 
-export const orderPrepMinutes = 5;
+// ---------- Pickup ----------
 export const pickupLocation = "Pelicans Breakfast Restaurant";
+
+// Presets shown as quick chips. Default is the first entry.
+export const pickupPresetMinutes = [5, 15, 30, 60] as const;
+export type PickupPreset = (typeof pickupPresetMinutes)[number];
+
+// Bounds for the "pick a time" input.
+export const kitchenHours = {
+  open: "06:30",
+  close: "14:00",
+};
+
+export type PickupSelection =
+  | { kind: "preset"; minutes: number }
+  | { kind: "custom"; time: string }; // "HH:MM" 24h
+
+export function presetLabel(min: number): string {
+  if (min < 60) return `In ${min} min`;
+  const hours = min / 60;
+  return `In ${hours} hr`;
+}
+
+export function resolvePickupTime(pickup: PickupSelection, now: Date = new Date()): Date {
+  if (pickup.kind === "preset") {
+    return new Date(now.getTime() + pickup.minutes * 60_000);
+  }
+  const [h, m] = pickup.time.split(":").map(Number);
+  const d = new Date(now);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+export function defaultCustomPickupTime(now: Date = new Date()): string {
+  // Now + 30 min, rounded up to nearest 15 min.
+  const ms = now.getTime() + 30 * 60_000;
+  const slot = 15 * 60_000;
+  const rounded = Math.ceil(ms / slot) * slot;
+  const d = new Date(rounded);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
 
 export function formatMoney(amount: number): string {
   if (amount === 0) return "$0";

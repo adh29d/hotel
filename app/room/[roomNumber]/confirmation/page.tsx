@@ -5,14 +5,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
 import {
-  addMinutes,
   coffees,
   formatMoney,
   formatTime,
   lateCheckoutLabel,
   milks,
-  orderPrepMinutes,
   pickupLocation,
+  resolvePickupTime,
 } from "@/lib/mockData";
 import SuccessTick from "@/components/SuccessTick";
 import ReviewCard from "@/components/ReviewCard";
@@ -34,34 +33,32 @@ export default function ConfirmationPage() {
     initRoom(params.roomNumber);
   }, [params.roomNumber, initRoom]);
 
+  // Lock pickup time on mount so it doesn't shift while the page is open.
   useEffect(() => {
-    setPickupTime(formatTime(addMinutes(new Date(), orderPrepMinutes)));
+    setPickupTime(formatTime(resolvePickupTime(state.pickup, new Date())));
+    // We intentionally only resolve once (on mount of the confirmation page).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const hasOrder = state.coffeeLines.length > 0;
-  const hasLate = state.checkoutHour > 10;
-
-  const checkedOutMessage = useMemo(() => {
-    const parts: string[] = [];
-    if (hasLate) {
-      parts.push(`Checkout extended to ${lateCheckoutLabel(state.checkoutHour)}.`);
-    }
-    if (hasOrder && pickupTime) {
-      parts.push(
-        `Your coffee will be ready at ${pickupLocation} by ${pickupTime}.`,
-      );
-    }
-    return parts.join(" ");
-  }, [hasLate, hasOrder, pickupTime, state.checkoutHour]);
-
-  const keyMessage = hasOrder
-    ? `Drop your keys with the team at ${pickupLocation} when you grab your coffee, or in the express checkout box next to reception.`
-    : "Drop your keys in the express checkout box next to reception.";
 
   if (!reservation) return null;
 
+  const isCheckoutDay = reservation.isCheckoutToday;
+  const hasOrder = state.coffeeLines.length > 0;
+  const hasLate = state.checkoutHour > 10;
+
   // ---------- Stage 2: actually checked out ----------
   if (checkedOut) {
+    const messageParts: string[] = [];
+    if (hasLate) {
+      messageParts.push(`Checkout extended to ${lateCheckoutLabel(state.checkoutHour)}.`);
+    }
+    if (hasOrder && pickupTime) {
+      messageParts.push(`Your coffee will be ready at ${pickupLocation} by ${pickupTime}.`);
+    }
+    const keyMessage = hasOrder
+      ? `Drop your keys with the team at ${pickupLocation} when you grab your coffee, or in the express checkout box next to reception.`
+      : "Drop your keys in the express checkout box next to reception.";
+
     return (
       <main className="px-5 pt-12 pb-12">
         <div className="text-center animate-fadeUp">
@@ -69,9 +66,9 @@ export default function ConfirmationPage() {
           <h1 className="mt-6 font-serif text-[30px] leading-tight text-ink">
             You&rsquo;re checked out.
           </h1>
-          {checkedOutMessage && (
+          {messageParts.length > 0 && (
             <p className="mt-2.5 text-[14px] text-muted leading-relaxed max-w-[320px] mx-auto">
-              {checkedOutMessage}
+              {messageParts.join(" ")}
             </p>
           )}
           <p className="mt-3 text-[14px] text-ink leading-relaxed max-w-[320px] mx-auto">
@@ -95,7 +92,18 @@ export default function ConfirmationPage() {
     );
   }
 
-  // ---------- Stage 1: paid, awaiting tap-to-check-out ----------
+  // ---------- Stage 1: paid ----------
+  // Mid-stay: this is the final screen — receipt + "Done".
+  // Checkout day: this leads into "Tap to check out".
+  const headline = isCheckoutDay
+    ? `One last tap, ${reservation.guestFirstName}.`
+    : `All settled, ${reservation.guestFirstName}.`;
+  const subline = isCheckoutDay
+    ? "Confirm your check-out below."
+    : hasOrder
+      ? `Your coffee will be ready at ${pickupLocation} by ${pickupTime}.`
+      : "Your balance is clear. Have a wonderful stay.";
+
   return (
     <main className="px-5 pt-14 pb-10 flex flex-col min-h-[100dvh]">
       <div className="text-center animate-fadeUp">
@@ -103,10 +111,10 @@ export default function ConfirmationPage() {
           <CheckIcon /> Payment received
         </span>
         <h1 className="mt-5 font-serif text-[26px] leading-tight text-ink">
-          One last tap, {reservation.guestFirstName}.
+          {headline}
         </h1>
-        <p className="mt-1.5 text-[13px] text-muted">
-          Confirm your check-out below.
+        <p className="mt-1.5 text-[13px] text-muted max-w-[320px] mx-auto leading-relaxed">
+          {subline}
         </p>
       </div>
 
@@ -161,13 +169,22 @@ export default function ConfirmationPage() {
 
       <div className="flex-1" />
 
-      <button
-        type="button"
-        onClick={() => setCheckedOut(true)}
-        className="mt-8 w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99]"
-      >
-        Tap to check out
-      </button>
+      {isCheckoutDay ? (
+        <button
+          type="button"
+          onClick={() => setCheckedOut(true)}
+          className="mt-8 w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99]"
+        >
+          Tap to check out
+        </button>
+      ) : (
+        <Link
+          href="/"
+          className="mt-8 w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99] flex items-center justify-center"
+        >
+          Done
+        </Link>
+      )}
     </main>
   );
 }

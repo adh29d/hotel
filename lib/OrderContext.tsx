@@ -3,15 +3,17 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import {
   coffees,
+  defaultCustomPickupTime,
   lateCheckoutConfig,
   lateCheckoutFee,
   milks,
+  PickupSelection,
   Reservation,
   reservations,
 } from "./mockData";
 
 export type CoffeeLine = {
-  id: string; // unique line id
+  id: string;
   coffeeId: string;
   milkId: string;
   qty: number;
@@ -21,7 +23,9 @@ export type OrderState = {
   roomNumber: string | null;
   checkoutHour: number; // 10..14
   coffeeLines: CoffeeLine[];
+  pickup: PickupSelection;
   paid: boolean;
+  checkedOut: boolean;
 };
 
 type OrderContextValue = {
@@ -36,20 +40,25 @@ type OrderContextValue = {
   updateCoffeeLine: (id: string, patch: Partial<Omit<CoffeeLine, "id">>) => void;
   removeCoffeeLine: (id: string) => void;
 
-  // computed
+  setPickupPreset: (minutes: number) => void;
+  setPickupCustom: (time?: string) => void;
+
   outstandingBalance: number;
   lateCheckoutCharge: number;
   coffeeSubtotal: number;
   total: number;
 
   markPaid: () => void;
+  markCheckedOut: () => void;
 };
 
 const defaultState: OrderState = {
   roomNumber: null,
   checkoutHour: 10,
   coffeeLines: [],
+  pickup: { kind: "preset", minutes: 5 },
   paid: false,
+  checkedOut: false,
 };
 
 const OrderContext = createContext<OrderContextValue | null>(null);
@@ -104,8 +113,23 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, coffeeLines: s.coffeeLines.filter((l) => l.id !== id) }));
   }, []);
 
+  const setPickupPreset = useCallback((minutes: number) => {
+    setState((s) => ({ ...s, pickup: { kind: "preset", minutes } }));
+  }, []);
+
+  const setPickupCustom = useCallback((time?: string) => {
+    setState((s) => ({
+      ...s,
+      pickup: { kind: "custom", time: time ?? defaultCustomPickupTime() },
+    }));
+  }, []);
+
   const markPaid = useCallback(() => {
     setState((s) => ({ ...s, paid: true }));
+  }, []);
+
+  const markCheckedOut = useCallback(() => {
+    setState((s) => ({ ...s, checkedOut: true }));
   }, []);
 
   const outstandingBalance = useMemo(() => {
@@ -138,11 +162,14 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     addCoffeeLine,
     updateCoffeeLine,
     removeCoffeeLine,
+    setPickupPreset,
+    setPickupCustom,
     outstandingBalance,
     lateCheckoutCharge,
     coffeeSubtotal,
     total,
     markPaid,
+    markCheckedOut,
   };
 
   return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;

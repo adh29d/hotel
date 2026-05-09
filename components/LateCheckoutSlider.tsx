@@ -30,16 +30,14 @@ export default function LateCheckoutSlider({ hour, onHourChange }: Props) {
 
   return (
     <div className="px-1">
-      <div className="flex items-baseline justify-between">
-        <div className="text-[13px] text-muted">Leaving at</div>
-        <div className="text-[13px] tabular-nums text-ink">
-          <span className="font-medium">{lateCheckoutLabel(hour)}</span>
-          <span className="text-muted ml-1.5">
-            {hour === baseHour ? "· included" : `· +$${fee}`}
-          </span>
-        </div>
+      <div className="text-[13px] text-muted">What time would you like to leave today?</div>
+
+      <div className="mt-1 text-[14px] tabular-nums">
+        <span className="font-medium text-ink">{lateCheckoutLabel(hour)}</span>
+        {fee > 0 && <span className="text-muted ml-2">+${fee}</span>}
       </div>
-      <div className="mt-2.5">
+
+      <div className="mt-3">
         <input
           type="range"
           className="rms-slider"
@@ -65,6 +63,10 @@ export default function LateCheckoutSlider({ hour, onHourChange }: Props) {
           ))}
         </div>
       </div>
+
+      <p className="mt-3 text-[11px] text-muted leading-snug">
+        Times subject to availability — confirmed once payment is made.
+      </p>
     </div>
   );
 }

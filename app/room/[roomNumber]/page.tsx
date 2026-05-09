@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
-import { formatMoney, lateCheckoutLabel } from "@/lib/mockData";
+import { formatMoney, lateCheckoutLabel, pickupLocation } from "@/lib/mockData";
 import LateCheckoutSlider from "@/components/LateCheckoutSlider";
 import CoffeeOrder from "@/components/CoffeeOrder";
 import AnimatedTotal from "@/components/AnimatedTotal";
@@ -24,8 +24,7 @@ export default function RoomLandingPage() {
     state,
     setCheckoutHour,
     outstandingBalance,
-    lateCheckoutCharge,
-    orderSubtotal,
+    coffeeSubtotal,
     total,
   } = useOrder();
   const [coffeeOpen, setCoffeeOpen] = useState(false);
@@ -36,10 +35,8 @@ export default function RoomLandingPage() {
   }, [roomNumber, initRoom]);
 
   const itemCount = useMemo(
-    () =>
-      state.coffeeLines.reduce((s, l) => s + l.qty, 0) +
-      state.pastryLines.reduce((s, l) => s + l.qty, 0),
-    [state.coffeeLines, state.pastryLines],
+    () => state.coffeeLines.reduce((s, l) => s + l.qty, 0),
+    [state.coffeeLines],
   );
 
   if (!reservation) {
@@ -49,8 +46,8 @@ export default function RoomLandingPage() {
         <p className="mt-2 text-muted">
           We couldn&rsquo;t find a reservation for room {roomNumber}.
         </p>
-        <Link href="/demo" className="mt-6 inline-block text-accent underline">
-          Back to demo
+        <Link href="/" className="mt-6 inline-block text-accent underline">
+          Back home
         </Link>
       </main>
     );
@@ -59,9 +56,9 @@ export default function RoomLandingPage() {
   const allPaid = reservation.alreadyPaid;
 
   return (
-    <main className="relative h-[100dvh] flex flex-col">
-      {/* Hero image with fade-down to white */}
-      <div className="absolute inset-x-0 top-0 h-[44%] -z-0 overflow-hidden">
+    <main className="relative h-[100dvh] flex flex-col overflow-hidden">
+      {/* Hero image — fades to white at the bottom */}
+      <div className="absolute inset-x-0 top-0 h-[58%] -z-0 overflow-hidden">
         <Image
           src={HERO_SRC}
           alt=""
@@ -70,80 +67,57 @@ export default function RoomLandingPage() {
           sizes="440px"
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-white/0 to-white" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/0 to-white" />
       </div>
 
-      {/* Header */}
-      <header className="relative z-10 px-6 pt-8 pb-2 animate-fadeUp">
-        <div className="flex items-center justify-between">
-          <div className="text-[11px] uppercase tracking-[0.2em] text-white/90 drop-shadow-sm">
-            RMS Pay
-          </div>
-          <div className="text-[11px] tracking-[0.12em] text-white/90 drop-shadow-sm tabular-nums">
-            ROOM {reservation.roomNumber}
-          </div>
-        </div>
+      {/* Greeting + meta — white over the hero */}
+      <header className="relative z-10 px-6 pt-14 pb-4 animate-fadeUp">
+        <h1
+          className="font-serif text-[36px] leading-[1.05] text-white"
+          style={{ textShadow: "0 1px 12px rgba(0,0,0,0.35)" }}
+        >
+          Good morning,
+          <br />
+          {reservation.guestFirstName}.
+        </h1>
+        <p
+          className="mt-3 text-[13px] text-white/95 tracking-tight"
+          style={{ textShadow: "0 1px 8px rgba(0,0,0,0.45)" }}
+        >
+          Room {reservation.roomNumber} · {reservation.checkOutDate} · checkout{" "}
+          {lateCheckoutLabel(state.checkoutHour)}
+        </p>
       </header>
 
-      {/* Spacer to push content below hero */}
-      <div className="relative z-10 flex-1 flex flex-col justify-end px-5 pb-3">
-        {/* Greeting card */}
-        <section className="px-1 pb-4 animate-fadeUp">
-          <h1 className="font-serif text-[30px] leading-[1.05] text-ink">
-            Good morning, {reservation.guestFirstName}.
-          </h1>
-          <p className="mt-1 text-[13px] text-muted">
-            {reservation.checkOutDate} · checkout{" "}
-            <span className="text-ink">{lateCheckoutLabel(state.checkoutHour)}</span>
-          </p>
-        </section>
+      <div className="flex-1" />
 
-        {/* Single combined card: balance + late checkout + add-on */}
-        <section className="rounded-3xl bg-surface p-5 animate-fadeUp">
-          {/* Balance row */}
-          <div className="flex items-baseline justify-between">
-            <div>
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
-                {allPaid ? "Stay paid" : "Outstanding"}
-              </div>
-              <div className="mt-1 font-serif text-[32px] leading-none text-ink tabular-nums">
-                {allPaid ? "$0" : formatMoney(outstandingBalance)}
-              </div>
+      {/* Combined card */}
+      <div className="relative z-10 px-5 animate-fadeUp">
+        <section className="rounded-3xl bg-surface p-5">
+          {/* Single price — balance only */}
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
+              {allPaid ? "Stay paid" : "Outstanding"}
             </div>
-            <div className="text-right text-[12px] text-muted">
-              {allPaid ? (
-                <span>You&rsquo;re all set.</span>
-              ) : reservation.charges.length > 0 ? (
-                <ul className="space-y-0.5 tabular-nums">
-                  {reservation.charges.map((c) => (
-                    <li key={c.label}>
-                      {c.label} · {formatMoney(c.amount)}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <span>Nothing owing</span>
-              )}
+            <div className="mt-1 font-serif text-[36px] leading-none text-ink tabular-nums">
+              {allPaid ? "$0" : formatMoney(outstandingBalance)}
             </div>
+            {!allPaid && reservation.charges.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setRequested(true)}
+                disabled={requested}
+                className="mt-2 text-[11px] text-accent hover:underline disabled:no-underline disabled:text-muted"
+              >
+                {requested
+                  ? "Itemised invoice request sent."
+                  : "Request itemised invoice from reception"}
+              </button>
+            )}
           </div>
-
-          {!allPaid && reservation.charges.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setRequested(true)}
-              disabled={requested}
-              className="mt-2 text-[11px] text-accent hover:underline disabled:no-underline disabled:text-muted"
-            >
-              {requested
-                ? "Itemised invoice request sent."
-                : "Request itemised invoice from reception"}
-            </button>
-          )}
 
           <div className="my-4 h-px bg-line" />
 
-          {/* Late checkout slider */}
           <LateCheckoutSlider
             hour={state.checkoutHour}
             onHourChange={setCheckoutHour}
@@ -151,7 +125,7 @@ export default function RoomLandingPage() {
 
           <div className="my-4 h-px bg-line" />
 
-          {/* Coffee + pastries entry row */}
+          {/* Coffee entry */}
           <button
             type="button"
             onClick={() => setCoffeeOpen(true)}
@@ -159,18 +133,18 @@ export default function RoomLandingPage() {
           >
             <div>
               <div className="text-[15px] text-ink font-medium">
-                Grab something on the way out
+                Grab a coffee on the way out
               </div>
               <div className="text-[12px] text-muted mt-0.5">
                 {itemCount === 0
-                  ? "Coffee, pastries — ready in 5 min"
-                  : `${itemCount} item${itemCount === 1 ? "" : "s"} · ready in 5 min`}
+                  ? `Ready at ${pickupLocation} in 5 min`
+                  : `${itemCount} coffee${itemCount === 1 ? "" : "s"} · ready at ${pickupLocation}`}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {orderSubtotal > 0 && (
+              {coffeeSubtotal > 0 && (
                 <span className="text-[13px] tabular-nums text-ink">
-                  {formatMoney(orderSubtotal)}
+                  {formatMoney(coffeeSubtotal)}
                 </span>
               )}
               <span className="text-muted text-lg leading-none">›</span>
@@ -179,7 +153,7 @@ export default function RoomLandingPage() {
         </section>
       </div>
 
-      {/* Sticky pay bar (Apple Pay style) */}
+      {/* Sticky pay bar */}
       <div className="relative z-10 px-5 pb-6 pt-3 bg-white animate-fadeUp">
         <div className="flex items-baseline justify-between mb-3 px-1">
           <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
@@ -201,7 +175,7 @@ export default function RoomLandingPage() {
       <BottomSheet
         open={coffeeOpen}
         onClose={() => setCoffeeOpen(false)}
-        title="Grab something on the way out?"
+        title="Grab a coffee on the way out?"
         footer={
           <button
             type="button"
@@ -209,8 +183,8 @@ export default function RoomLandingPage() {
             className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99] flex items-center justify-center gap-2"
           >
             <span>Done</span>
-            {orderSubtotal > 0 && (
-              <span className="opacity-70 tabular-nums">· {formatMoney(orderSubtotal)}</span>
+            {coffeeSubtotal > 0 && (
+              <span className="opacity-70 tabular-nums">· {formatMoney(coffeeSubtotal)}</span>
             )}
           </button>
         }

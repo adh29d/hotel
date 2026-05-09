@@ -6,7 +6,6 @@ import {
   lateCheckoutConfig,
   lateCheckoutFee,
   milks,
-  pastries,
   Reservation,
   reservations,
 } from "./mockData";
@@ -18,16 +17,10 @@ export type CoffeeLine = {
   qty: number;
 };
 
-export type PastryLine = {
-  pastryId: string;
-  qty: number;
-};
-
 export type OrderState = {
   roomNumber: string | null;
   checkoutHour: number; // 10..14
   coffeeLines: CoffeeLine[];
-  pastryLines: PastryLine[];
   paid: boolean;
 };
 
@@ -43,14 +36,10 @@ type OrderContextValue = {
   updateCoffeeLine: (id: string, patch: Partial<Omit<CoffeeLine, "id">>) => void;
   removeCoffeeLine: (id: string) => void;
 
-  setPastryQty: (pastryId: string, qty: number) => void;
-
   // computed
   outstandingBalance: number;
   lateCheckoutCharge: number;
   coffeeSubtotal: number;
-  pastrySubtotal: number;
-  orderSubtotal: number; // coffee + pastry
   total: number;
 
   markPaid: () => void;
@@ -60,7 +49,6 @@ const defaultState: OrderState = {
   roomNumber: null,
   checkoutHour: 10,
   coffeeLines: [],
-  pastryLines: [],
   paid: false,
 };
 
@@ -116,24 +104,6 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, coffeeLines: s.coffeeLines.filter((l) => l.id !== id) }));
   }, []);
 
-  const setPastryQty = useCallback((pastryId: string, qty: number) => {
-    setState((s) => {
-      const existing = s.pastryLines.find((p) => p.pastryId === pastryId);
-      if (qty <= 0) {
-        return { ...s, pastryLines: s.pastryLines.filter((p) => p.pastryId !== pastryId) };
-      }
-      if (existing) {
-        return {
-          ...s,
-          pastryLines: s.pastryLines.map((p) =>
-            p.pastryId === pastryId ? { ...p, qty } : p,
-          ),
-        };
-      }
-      return { ...s, pastryLines: [...s.pastryLines, { pastryId, qty }] };
-    });
-  }, []);
-
   const markPaid = useCallback(() => {
     setState((s) => ({ ...s, paid: true }));
   }, []);
@@ -157,15 +127,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     }, 0);
   }, [state.coffeeLines]);
 
-  const pastrySubtotal = useMemo(() => {
-    return state.pastryLines.reduce((sum, line) => {
-      const p = pastries.find((x) => x.id === line.pastryId);
-      return sum + (p?.price ?? 0) * line.qty;
-    }, 0);
-  }, [state.pastryLines]);
-
-  const orderSubtotal = coffeeSubtotal + pastrySubtotal;
-  const total = outstandingBalance + lateCheckoutCharge + orderSubtotal;
+  const total = outstandingBalance + lateCheckoutCharge + coffeeSubtotal;
 
   const value: OrderContextValue = {
     state,
@@ -176,12 +138,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     addCoffeeLine,
     updateCoffeeLine,
     removeCoffeeLine,
-    setPastryQty,
     outstandingBalance,
     lateCheckoutCharge,
     coffeeSubtotal,
-    pastrySubtotal,
-    orderSubtotal,
     total,
     markPaid,
   };

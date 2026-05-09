@@ -1,4 +1,4 @@
-// Single source of truth for the demo. Adjust prices and reservations here.
+// Single source of truth for the demo. Adjust prices and the reservation here.
 
 export type Charge = {
   label: string;
@@ -13,8 +13,9 @@ export type Reservation = {
   checkOutDate: string; // human readable, e.g. "Sat 10 May"
   charges: Charge[];
   alreadyPaid: boolean;
-  scenarioNote: string; // shown only on /demo
 };
+
+export const DEMO_ROOM = "204";
 
 export const reservations: Record<string, Reservation> = {
   "204": {
@@ -25,40 +26,6 @@ export const reservations: Record<string, Reservation> = {
     checkOutDate: "Sat 10 May",
     charges: [{ label: "Restaurant", amount: 87 }],
     alreadyPaid: false,
-    scenarioNote: "$87 outstanding · standard checkout",
-  },
-  "312": {
-    roomNumber: "312",
-    guestFirstName: "Marcus",
-    guestLastName: "Bell",
-    nights: 1,
-    checkOutDate: "Sat 10 May",
-    charges: [],
-    alreadyPaid: false,
-    scenarioNote: "Nothing owing · can still order coffee + late checkout",
-  },
-  "415": {
-    roomNumber: "415",
-    guestFirstName: "Priya",
-    guestLastName: "Shah",
-    nights: 3,
-    checkOutDate: "Sat 10 May",
-    charges: [
-      { label: "Restaurant", amount: 248 },
-      { label: "Minibar", amount: 64 },
-    ],
-    alreadyPaid: false,
-    scenarioNote: "$312 outstanding · restaurant + minibar",
-  },
-  "508": {
-    roomNumber: "508",
-    guestFirstName: "Tom",
-    guestLastName: "Whitaker",
-    nights: 2,
-    checkOutDate: "Sat 10 May",
-    charges: [],
-    alreadyPaid: true,
-    scenarioNote: "Already paid · coffee + late checkout only",
   },
 };
 
@@ -80,10 +47,9 @@ export function lateCheckoutFee(hour: number): number {
   return extras * lateCheckoutConfig.hourlyRate;
 }
 
-// ---------- Coffee + pastry menu ----------
+// ---------- Coffee menu ----------
 export type Coffee = { id: string; name: string; price: number };
 export type Milk = { id: string; name: string; surcharge: number };
-export type Pastry = { id: string; name: string; price: number };
 
 export const coffees: Coffee[] = [
   { id: "flat-white", name: "Flat white", price: 5 },
@@ -100,14 +66,8 @@ export const milks: Milk[] = [
   { id: "soy", name: "Soy", surcharge: 0.8 },
 ];
 
-export const pastries: Pastry[] = [
-  { id: "butter-croissant", name: "Butter croissant", price: 6 },
-  { id: "almond-croissant", name: "Almond croissant", price: 7 },
-  { id: "blueberry-muffin", name: "Blueberry muffin", price: 6 },
-  { id: "banana-bread", name: "Banana bread", price: 6 },
-];
-
 export const orderPrepMinutes = 5;
+export const pickupLocation = "Pelicans Breakfast Restaurant";
 
 export function formatMoney(amount: number): string {
   if (amount === 0) return "$0";

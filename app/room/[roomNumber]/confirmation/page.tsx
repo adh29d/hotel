@@ -12,7 +12,7 @@ import {
   lateCheckoutLabel,
   milks,
   orderPrepMinutes,
-  pastries,
+  pickupLocation,
 } from "@/lib/mockData";
 import SuccessTick from "@/components/SuccessTick";
 import ReviewCard from "@/components/ReviewCard";
@@ -26,8 +26,6 @@ export default function ConfirmationPage() {
     outstandingBalance,
     lateCheckoutCharge,
     coffeeSubtotal,
-    pastrySubtotal,
-    orderSubtotal,
     total,
   } = useOrder();
   const [pickupTime, setPickupTime] = useState<string>("");
@@ -40,7 +38,7 @@ export default function ConfirmationPage() {
     setPickupTime(formatTime(addMinutes(new Date(), orderPrepMinutes)));
   }, []);
 
-  const hasOrder = state.coffeeLines.length > 0 || state.pastryLines.length > 0;
+  const hasOrder = state.coffeeLines.length > 0;
   const hasLate = state.checkoutHour > 10;
 
   const message = useMemo(() => {
@@ -50,7 +48,9 @@ export default function ConfirmationPage() {
       parts.push(`Checkout extended to ${lateCheckoutLabel(state.checkoutHour)}.`);
     }
     if (hasOrder && pickupTime) {
-      parts.push(`Your order will be ready at reception by ${pickupTime}.`);
+      parts.push(
+        `Your coffee will be ready at ${pickupLocation} by ${pickupTime}.`,
+      );
     }
     parts.push("Just drop your keys when you're done.");
     return parts.join(" ");
@@ -112,18 +112,6 @@ export default function ConfirmationPage() {
               </li>
             );
           })}
-
-          {state.pastryLines.map((line) => {
-            const p = pastries.find((x) => x.id === line.pastryId)!;
-            return (
-              <li key={line.pastryId} className="flex justify-between py-2">
-                <span className="text-muted">
-                  {line.qty}× {p.name}
-                </span>
-                <span className="tabular-nums text-ink">{formatMoney(p.price * line.qty)}</span>
-              </li>
-            );
-          })}
         </ul>
 
         <div className="mt-3 pt-3 border-t border-line space-y-1 text-[13px] text-muted">
@@ -133,8 +121,8 @@ export default function ConfirmationPage() {
             value={lateCheckoutCharge === 0 ? "—" : formatMoney(lateCheckoutCharge)}
           />
           <Row
-            label="Coffee & pastries"
-            value={orderSubtotal === 0 ? "—" : formatMoney(coffeeSubtotal + pastrySubtotal)}
+            label="Coffee order"
+            value={coffeeSubtotal === 0 ? "—" : formatMoney(coffeeSubtotal)}
           />
         </div>
         <div className="mt-3 pt-3 border-t border-line flex justify-between items-baseline">
@@ -149,10 +137,10 @@ export default function ConfirmationPage() {
 
       <div className="mt-8 text-center">
         <Link
-          href="/demo"
+          href="/"
           className="text-[11px] text-muted hover:text-ink underline underline-offset-4"
         >
-          Return to demo index
+          Restart demo
         </Link>
       </div>
     </main>

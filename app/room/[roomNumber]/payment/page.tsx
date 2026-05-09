@@ -17,7 +17,7 @@ export default function PaymentPage() {
     state,
     outstandingBalance,
     lateCheckoutCharge,
-    orderSubtotal,
+    coffeeSubtotal,
     total,
     markPaid,
   } = useOrder();
@@ -76,9 +76,9 @@ export default function PaymentPage() {
             </span>
           </li>
           <li className="flex justify-between py-2.5">
-            <span className="text-muted">Coffee &amp; pastries</span>
+            <span className="text-muted">Coffee order</span>
             <span className="tabular-nums text-ink">
-              {orderSubtotal === 0 ? "—" : formatMoney(orderSubtotal)}
+              {coffeeSubtotal === 0 ? "—" : formatMoney(coffeeSubtotal)}
             </span>
           </li>
         </ul>

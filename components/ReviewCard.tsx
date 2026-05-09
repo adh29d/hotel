@@ -83,7 +83,7 @@ export default function ReviewCard() {
   return (
     <section className="rounded-3xl bg-surface p-6 animate-fadeUp">
       <div className="font-serif text-[20px] text-ink">How was your stay?</div>
-      <p className="mt-1 text-[13px] text-muted">A tap is all it takes.</p>
+      <p className="mt-1 text-[13px] text-muted">We appreciate all feedback received.</p>
       <div className="mt-5 flex justify-between max-w-[260px] mx-auto">
         {[1, 2, 3, 4, 5].map((n) => {
           const filled = (hover || rating) >= n;

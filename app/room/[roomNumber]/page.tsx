@@ -114,32 +114,42 @@ export default function RoomLandingPage() {
           sizes="440px"
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/0 to-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/15 to-white" />
       </div>
 
       <header className="relative z-10 px-6 pt-14 pb-4 animate-fadeUp">
         <h1
           className="font-serif text-[36px] leading-[1.05] text-white"
-          style={{ textShadow: "0 1px 12px rgba(0,0,0,0.35)" }}
+          style={{
+            textShadow:
+              "0 1px 2px rgba(0,0,0,0.5), 0 2px 16px rgba(0,0,0,0.4)",
+          }}
         >
           {greetingPrefix(now)},
           <br />
           {reservation.guestFirstName}.
         </h1>
         <p
-          className="mt-3 text-[13px] text-white/95 tracking-tight"
-          style={{ textShadow: "0 1px 8px rgba(0,0,0,0.45)" }}
+          className="mt-3 text-[13px] text-white tracking-tight"
+          style={{
+            textShadow:
+              "0 1px 2px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.4)",
+          }}
         >
           {subtitle}
         </p>
-        <div className="mt-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white tracking-tight">
-            <WeatherIcon condition={weather.condition} />
-            <span className="tabular-nums">
-              Toukley · {weather.tempC}° · {weather.label}
-            </span>
+        <p
+          className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] text-white/90 tracking-tight"
+          style={{
+            textShadow:
+              "0 1px 2px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.4)",
+          }}
+        >
+          <WeatherIcon condition={weather.condition} />
+          <span className="tabular-nums">
+            {weather.tempC}° · {weather.label} in Toukley
           </span>
-        </div>
+        </p>
       </header>
 
       <div className="flex-1" />

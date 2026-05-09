@@ -24,9 +24,9 @@ export const DEMO_ROOM = "204";
 export const reservations: Record<string, Reservation> = {
   "204": {
     roomNumber: "204",
-    guestFirstName: "Eleanor",
+    guestFirstName: "Charlotte",
     guestLastName: "Hayes",
-    email: "eleanor.hayes@email.com",
+    email: "charlotte.hayes@email.com",
     nights: 2,
     checkOutDate: "Sat 10 May",
     charges: [{ label: "Restaurant", amount: 87 }],

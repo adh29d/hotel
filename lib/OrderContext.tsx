@@ -10,12 +10,16 @@ import {
   PickupSelection,
   Reservation,
   reservations,
+  syrups,
+  sweeteners,
 } from "./mockData";
 
 export type CoffeeLine = {
   id: string;
   coffeeId: string;
   milkId: string;
+  syrupId: string;
+  sweetenerId: string;
   qty: number;
 };
 
@@ -94,7 +98,14 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       ...s,
       coffeeLines: [
         ...s.coffeeLines,
-        { id: newCoffeeId(), coffeeId: coffees[0].id, milkId: milks[0].id, qty: 1 },
+        {
+          id: newCoffeeId(),
+          coffeeId: coffees[0].id,
+          milkId: milks[0].id,
+          syrupId: syrups[0].id,
+          sweetenerId: sweeteners[0].id,
+          qty: 1,
+        },
       ],
     }));
   }, []);
@@ -146,7 +157,13 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     return state.coffeeLines.reduce((sum, line) => {
       const coffee = coffees.find((c) => c.id === line.coffeeId);
       const milk = milks.find((m) => m.id === line.milkId);
-      const unit = (coffee?.price ?? 0) + (milk?.surcharge ?? 0);
+      const syrup = syrups.find((s) => s.id === line.syrupId);
+      const sweet = sweeteners.find((s) => s.id === line.sweetenerId);
+      const unit =
+        (coffee?.price ?? 0) +
+        (milk?.surcharge ?? 0) +
+        (syrup?.surcharge ?? 0) +
+        (sweet?.surcharge ?? 0);
       return sum + unit * line.qty;
     }, 0);
   }, [state.coffeeLines]);

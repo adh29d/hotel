@@ -12,6 +12,8 @@ import {
   milks,
   pickupLocation,
   resolvePickupTime,
+  sweeteners,
+  syrups,
 } from "@/lib/mockData";
 import SuccessTick from "@/components/SuccessTick";
 import ReviewCard from "@/components/ReviewCard";
@@ -148,12 +150,20 @@ export default function ConfirmationPage() {
           {state.coffeeLines.map((line) => {
             const c = coffees.find((x) => x.id === line.coffeeId)!;
             const m = milks.find((x) => x.id === line.milkId)!;
-            const lineTotal = (c.price + m.surcharge) * line.qty;
+            const sy = syrups.find((x) => x.id === line.syrupId)!;
+            const sw = sweeteners.find((x) => x.id === line.sweetenerId)!;
+            const lineTotal =
+              (c.price + m.surcharge + sy.surcharge + sw.surcharge) * line.qty;
+            const extras = [
+              m.surcharge > 0 ? m.name : null,
+              sy.id !== "none" ? sy.name : null,
+              sw.id !== "none" ? sw.name : null,
+            ].filter(Boolean);
             return (
               <li key={line.id} className="flex justify-between py-1.5">
                 <span className="text-muted">
                   {line.qty}× {c.name}
-                  {m.surcharge > 0 ? ` · ${m.name}` : ""}
+                  {extras.length > 0 ? ` · ${extras.join(" · ")}` : ""}
                 </span>
                 <span className="tabular-nums text-ink">{formatMoney(lineTotal)}</span>
               </li>

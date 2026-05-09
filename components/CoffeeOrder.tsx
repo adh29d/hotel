@@ -11,6 +11,8 @@ import {
   pickupPresetMinutes,
   presetLabel,
   resolvePickupTime,
+  sweeteners,
+  syrups,
 } from "@/lib/mockData";
 import { useOrder } from "@/lib/OrderContext";
 import QuantityStepper from "./QuantityStepper";
@@ -52,31 +54,22 @@ export default function CoffeeOrder() {
             const active =
               state.pickup.kind === "preset" && state.pickup.minutes === min;
             return (
-              <button
+              <Chip
                 key={min}
-                type="button"
+                active={active}
                 onClick={() => setPickupPreset(min)}
-                className={`text-[11px] rounded-full px-2.5 py-1 border transition active:scale-95 ${
-                  active
-                    ? "bg-ink text-white border-ink"
-                    : "bg-white text-muted border-line hover:border-ink/40"
-                }`}
               >
                 {presetLabel(min)}
-              </button>
+              </Chip>
             );
           })}
-          <button
-            type="button"
+          <Chip
+            active={state.pickup.kind === "custom"}
             onClick={() => setPickupCustom()}
-            className={`text-[11px] rounded-full px-2.5 py-1 border transition active:scale-95 inline-flex items-center gap-1 ${
-              state.pickup.kind === "custom"
-                ? "bg-ink text-white border-ink"
-                : "bg-white text-muted border-line hover:border-ink/40"
-            }`}
+            icon={<ClockIcon />}
           >
-            <ClockIcon /> Pick a time
-          </button>
+            Pick a time
+          </Chip>
         </div>
 
         {state.pickup.kind === "custom" && (
@@ -98,84 +91,175 @@ export default function CoffeeOrder() {
       </div>
 
       {/* Coffee lines */}
-      <div className="space-y-2">
-        {state.coffeeLines.map((line) => {
-          const coffee = coffees.find((c) => c.id === line.coffeeId)!;
-          const milk = milks.find((m) => m.id === line.milkId)!;
-          const lineTotal = (coffee.price + milk.surcharge) * line.qty;
-          return (
-            <div
-              key={line.id}
-              className="rounded-2xl bg-surface p-3 animate-fadeUp"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <select
-                  value={line.coffeeId}
-                  onChange={(e) => updateCoffeeLine(line.id, { coffeeId: e.target.value })}
-                  className="bg-transparent font-medium text-ink text-[15px] focus:outline-none"
-                >
-                  {coffees.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-[13px] tabular-nums text-muted">
-                    {formatMoney(lineTotal)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeCoffeeLine(line.id)}
-                    aria-label="Remove coffee"
-                    className="text-muted hover:text-ink transition text-base leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-              <div className="mt-2.5 flex items-center justify-between">
-                <div className="flex flex-wrap gap-1.5">
-                  {milks.map((m) => {
-                    const active = m.id === line.milkId;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => updateCoffeeLine(line.id, { milkId: m.id })}
-                        className={`text-[11px] rounded-full px-2.5 py-1 border transition active:scale-95 ${
-                          active
-                            ? "bg-ink text-white border-ink"
-                            : "bg-white text-muted border-line hover:border-ink/40"
-                        }`}
-                      >
-                        {m.name}
-                        {m.surcharge > 0 ? ` +$${m.surcharge.toFixed(2)}` : ""}
-                      </button>
-                    );
-                  })}
-                </div>
-                <QuantityStepper
-                  size="sm"
-                  value={line.qty}
-                  min={1}
-                  max={4}
-                  onChange={(v) => updateCoffeeLine(line.id, { qty: v })}
-                />
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-2.5">
+        {state.coffeeLines.map((line, idx) => (
+          <CoffeeLineCard
+            key={line.id}
+            line={line}
+            index={idx + 1}
+            onChange={(patch) => updateCoffeeLine(line.id, patch)}
+            onRemove={() => removeCoffeeLine(line.id)}
+          />
+        ))}
 
         <button
           type="button"
           onClick={addCoffeeLine}
-          className="w-full rounded-2xl border border-dashed border-line py-2.5 text-[13px] text-muted hover:text-ink hover:border-ink/40 transition active:scale-[0.99]"
+          className="w-full rounded-2xl border border-dashed border-line py-3 text-[13px] text-muted hover:text-ink hover:border-ink/40 transition active:scale-[0.99] inline-flex items-center justify-center gap-1.5"
         >
+          <PlusIcon />
           {state.coffeeLines.length === 0 ? "Add a coffee" : "Add another coffee"}
         </button>
       </div>
     </div>
+  );
+}
+
+type LineProps = {
+  line: {
+    id: string;
+    coffeeId: string;
+    milkId: string;
+    syrupId: string;
+    sweetenerId: string;
+    qty: number;
+  };
+  index: number;
+  onChange: (patch: Partial<{ coffeeId: string; milkId: string; syrupId: string; sweetenerId: string; qty: number }>) => void;
+  onRemove: () => void;
+};
+
+function CoffeeLineCard({ line, index, onChange, onRemove }: LineProps) {
+  const coffee = coffees.find((c) => c.id === line.coffeeId)!;
+  const milk = milks.find((m) => m.id === line.milkId)!;
+  const syrup = syrups.find((s) => s.id === line.syrupId)!;
+  const sweet = sweeteners.find((s) => s.id === line.sweetenerId)!;
+  const unit = coffee.price + milk.surcharge + syrup.surcharge + sweet.surcharge;
+  const lineTotal = unit * line.qty;
+
+  return (
+    <div className="rounded-2xl bg-surface p-4 animate-fadeUp">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[11px] tabular-nums text-muted w-5">{index}.</span>
+          <div className="relative">
+            <select
+              value={line.coffeeId}
+              onChange={(e) => onChange({ coffeeId: e.target.value })}
+              className="appearance-none bg-white rounded-xl pl-3 pr-7 py-1.5 font-medium text-ink text-[15px] border border-line focus:outline-none focus:border-ink/40"
+            >
+              {coffees.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted">
+              <ChevronDown />
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[13px] tabular-nums text-ink">
+            {formatMoney(lineTotal)}
+          </span>
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label="Remove coffee"
+            className="h-7 w-7 rounded-full bg-white text-muted hover:text-ink transition flex items-center justify-center text-base leading-none"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      <Section label="Milk">
+        {milks.map((m) => (
+          <Chip
+            key={m.id}
+            active={m.id === line.milkId}
+            onClick={() => onChange({ milkId: m.id })}
+          >
+            {m.name}
+            {m.surcharge > 0 ? ` +$${m.surcharge.toFixed(2)}` : ""}
+          </Chip>
+        ))}
+      </Section>
+
+      <Section label="Syrup">
+        {syrups.map((s) => (
+          <Chip
+            key={s.id}
+            active={s.id === line.syrupId}
+            onClick={() => onChange({ syrupId: s.id })}
+          >
+            {s.name}
+            {s.surcharge > 0 ? ` +$${s.surcharge.toFixed(2)}` : ""}
+          </Chip>
+        ))}
+      </Section>
+
+      <Section label="Sweetener">
+        {sweeteners.map((s) => (
+          <Chip
+            key={s.id}
+            active={s.id === line.sweetenerId}
+            onClick={() => onChange({ sweetenerId: s.id })}
+          >
+            {s.name}
+          </Chip>
+        ))}
+      </Section>
+
+      <div className="mt-3 flex justify-end">
+        <QuantityStepper
+          size="sm"
+          value={line.qty}
+          min={1}
+          max={4}
+          onChange={(v) => onChange({ qty: v })}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-3">
+      <div className="text-[10px] uppercase tracking-[0.14em] text-muted mb-1.5">
+        {label}
+      </div>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
+    </div>
+  );
+}
+
+function Chip({
+  active,
+  onClick,
+  children,
+  icon,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-[11px] rounded-full px-2.5 py-1 border transition active:scale-95 inline-flex items-center gap-1 ${
+        active
+          ? "bg-ink text-white border-ink"
+          : "bg-white text-muted border-line hover:border-ink/40"
+      }`}
+    >
+      {icon}
+      <span>{children}</span>
+    </button>
   );
 }
 
@@ -185,6 +269,33 @@ function ClockIcon() {
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
       <path
         d="M12 7v5l3 2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 5v14M5 12h14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronDown() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M6 9l6 6 6-6"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

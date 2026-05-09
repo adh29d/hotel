@@ -9,6 +9,7 @@ export type Reservation = {
   roomNumber: string;
   guestFirstName: string;
   guestLastName: string;
+  email: string;
   nights: number;
   checkOutDate: string; // human readable, e.g. "Sat 10 May"
   charges: Charge[];
@@ -25,6 +26,7 @@ export const reservations: Record<string, Reservation> = {
     roomNumber: "204",
     guestFirstName: "Eleanor",
     guestLastName: "Hayes",
+    email: "eleanor.hayes@email.com",
     nights: 2,
     checkOutDate: "Sat 10 May",
     charges: [{ label: "Restaurant", amount: 87 }],
@@ -54,6 +56,8 @@ export function lateCheckoutFee(hour: number): number {
 // ---------- Coffee menu ----------
 export type Coffee = { id: string; name: string; price: number };
 export type Milk = { id: string; name: string; surcharge: number };
+export type Syrup = { id: string; name: string; surcharge: number };
+export type Sweetener = { id: string; name: string; surcharge: number };
 
 export const coffees: Coffee[] = [
   { id: "flat-white", name: "Flat white", price: 5 },
@@ -70,22 +74,26 @@ export const milks: Milk[] = [
   { id: "soy", name: "Soy", surcharge: 0.8 },
 ];
 
+export const syrups: Syrup[] = [
+  { id: "none", name: "None", surcharge: 0 },
+  { id: "vanilla", name: "Vanilla", surcharge: 0.5 },
+  { id: "caramel", name: "Caramel", surcharge: 0.5 },
+  { id: "hazelnut", name: "Hazelnut", surcharge: 0.5 },
+];
+
+export const sweeteners: Sweetener[] = [
+  { id: "none", name: "None", surcharge: 0 },
+  { id: "sugar", name: "Sugar", surcharge: 0 },
+  { id: "brown", name: "Brown sugar", surcharge: 0 },
+  { id: "stevia", name: "Stevia", surcharge: 0 },
+];
+
 // ---------- Pickup ----------
 export const pickupLocation = "Pelicans Breakfast Restaurant";
 
-// ---------- Live weather (mocked for demo) ----------
-export type WeatherCondition = "sunny" | "cloudy" | "rain" | "night";
-export const currentWeather: { tempC: number; label: string; condition: WeatherCondition } = {
-  tempC: 22,
-  label: "Sunny",
-  condition: "sunny",
-};
-
-// Presets shown as quick chips. Default is the first entry.
 export const pickupPresetMinutes = [5, 15, 30, 60] as const;
 export type PickupPreset = (typeof pickupPresetMinutes)[number];
 
-// Bounds for the "pick a time" input.
 export const kitchenHours = {
   open: "06:30",
   close: "14:00",
@@ -112,7 +120,6 @@ export function resolvePickupTime(pickup: PickupSelection, now: Date = new Date(
 }
 
 export function defaultCustomPickupTime(now: Date = new Date()): string {
-  // Now + 30 min, rounded up to nearest 15 min.
   const ms = now.getTime() + 30 * 60_000;
   const slot = 15 * 60_000;
   const rounded = Math.ceil(ms / slot) * slot;

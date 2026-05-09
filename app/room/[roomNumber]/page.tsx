@@ -6,16 +6,22 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
 import {
-  currentWeather,
   formatMoney,
   formatTime,
   pickupLocation,
   resolvePickupTime,
 } from "@/lib/mockData";
+import {
+  fallbackWeather,
+  fetchToukleyWeather,
+  LiveWeather,
+  WeatherCondition,
+} from "@/lib/weather";
 import LateCheckoutSlider from "@/components/LateCheckoutSlider";
 import CoffeeOrder from "@/components/CoffeeOrder";
 import AnimatedTotal from "@/components/AnimatedTotal";
 import BottomSheet from "@/components/BottomSheet";
+import InvoiceRequestModal from "@/components/InvoiceRequestModal";
 
 const HERO_SRC =
   "https://beachcomberhotelandresort.com.au/wp-content/uploads/2022/09/Pelicans-Breakfast-417b.jpg";
@@ -34,7 +40,8 @@ export default function RoomLandingPage() {
     total,
   } = useOrder();
   const [coffeeOpen, setCoffeeOpen] = useState(false);
-  const [requested, setRequested] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoiceSent, setInvoiceSent] = useState(false);
 
   useEffect(() => {
     initRoom(roomNumber);
@@ -56,6 +63,23 @@ export default function RoomLandingPage() {
     [state.pickup, now],
   );
 
+  // Live Toukley weather (Open-Meteo, no auth). Falls back to a static
+  // sunny default if the request fails or hasn't returned yet.
+  const [weather, setWeather] = useState<LiveWeather>(fallbackWeather);
+  useEffect(() => {
+    let cancelled = false;
+    fetchToukleyWeather()
+      .then((w) => {
+        if (!cancelled) setWeather(w);
+      })
+      .catch(() => {
+        /* keep fallback */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   if (!reservation) {
     return (
       <main className="px-6 py-12 animate-fadeIn">
@@ -73,7 +97,6 @@ export default function RoomLandingPage() {
   const allPaid = reservation.alreadyPaid;
   const isCheckoutDay = reservation.isCheckoutToday;
 
-  // Header subtitle adapts to whether today is their checkout day.
   const subtitle = isCheckoutDay
     ? `Room ${reservation.roomNumber} · Checking out today`
     : `Room ${reservation.roomNumber} · Checking out ${reservation.checkOutDate}`;
@@ -111,9 +134,9 @@ export default function RoomLandingPage() {
         </p>
         <div className="mt-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white tracking-tight">
-            <WeatherIcon condition={currentWeather.condition} />
+            <WeatherIcon condition={weather.condition} />
             <span className="tabular-nums">
-              Outside right now · {currentWeather.tempC}° · {currentWeather.label}
+              Toukley · {weather.tempC}° · {weather.label}
             </span>
           </span>
         </div>
@@ -123,10 +146,9 @@ export default function RoomLandingPage() {
 
       <div className="relative z-10 px-5 animate-fadeUp">
         <section className="rounded-3xl bg-surface p-5">
-          {/* Single price — balance only */}
           <div>
             <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
-              {allPaid ? "Stay paid" : "Outstanding"}
+              {allPaid ? "Stay paid" : "Your current balance"}
             </div>
             <div className="mt-1 text-[36px] font-medium leading-none text-ink tabular-nums tracking-tight">
               {allPaid ? "$0" : formatMoney(outstandingBalance)}
@@ -134,11 +156,11 @@ export default function RoomLandingPage() {
             {!allPaid && reservation.charges.length > 0 && (
               <button
                 type="button"
-                onClick={() => setRequested(true)}
-                disabled={requested}
+                onClick={() => setInvoiceOpen(true)}
+                disabled={invoiceSent}
                 className="mt-2 text-[11px] text-accent hover:underline disabled:no-underline disabled:text-muted"
               >
-                {requested
+                {invoiceSent
                   ? "Itemised invoice request sent."
                   : "Request itemised invoice from reception"}
               </button>
@@ -157,7 +179,6 @@ export default function RoomLandingPage() {
 
           <div className="my-4 h-px bg-line" />
 
-          {/* Coffee entry */}
           <button
             type="button"
             onClick={() => setCoffeeOpen(true)}
@@ -166,8 +187,8 @@ export default function RoomLandingPage() {
             <div>
               <div className="text-[15px] text-ink font-medium">
                 {isCheckoutDay
-                  ? "Grab a coffee on the way out"
-                  : "Order a coffee from Pelicans"}
+                  ? "Feel like a coffee on the way out?"
+                  : "Feel like a coffee?"}
               </div>
               <div className="text-[12px] text-muted mt-0.5">
                 {itemCount === 0
@@ -207,7 +228,11 @@ export default function RoomLandingPage() {
       <BottomSheet
         open={coffeeOpen}
         onClose={() => setCoffeeOpen(false)}
-        title={isCheckoutDay ? "Coffee on the way out?" : "Order a coffee"}
+        title={
+          isCheckoutDay
+            ? "Feel like a coffee on the way out?"
+            : "Feel like a coffee?"
+        }
         footer={
           <button
             type="button"
@@ -223,6 +248,13 @@ export default function RoomLandingPage() {
       >
         <CoffeeOrder />
       </BottomSheet>
+
+      <InvoiceRequestModal
+        open={invoiceOpen}
+        onClose={() => setInvoiceOpen(false)}
+        defaultEmail={reservation.email}
+        onSent={() => setInvoiceSent(true)}
+      />
     </main>
   );
 }
@@ -234,7 +266,7 @@ function greetingPrefix(now: Date): string {
   return "Good evening";
 }
 
-function WeatherIcon({ condition }: { condition: "sunny" | "cloudy" | "rain" | "night" }) {
+function WeatherIcon({ condition }: { condition: WeatherCondition }) {
   const stroke = "currentColor";
   if (condition === "cloudy") {
     return (
@@ -257,7 +289,12 @@ function WeatherIcon({ condition }: { condition: "sunny" | "cloudy" | "rain" | "
           strokeWidth="1.6"
           strokeLinejoin="round"
         />
-        <path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" />
+        <path
+          d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"
+          stroke={stroke}
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
       </svg>
     );
   }

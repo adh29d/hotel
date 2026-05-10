@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   coffees,
   formatMoney,
@@ -16,6 +16,7 @@ import {
 import { useOrder } from "@/lib/OrderContext";
 import QuantityStepper from "./QuantityStepper";
 import CoffeeCupIcon from "./CoffeeCupIcon";
+import Modal from "./Modal";
 
 export default function CoffeeOrder() {
   const {
@@ -267,36 +268,14 @@ function CoffeePicker({
   onSelect: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("touchstart", onDown);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("touchstart", onDown);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
   const selected = coffees.find((c) => c.id === value)!;
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="listbox"
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
         aria-expanded={open}
         className="inline-flex items-center gap-2 bg-white rounded-xl pl-3 pr-3 py-1.5 font-medium text-ink text-[15px] border border-line transition active:scale-[0.98] hover:border-ink/40"
       >
@@ -305,38 +284,58 @@ function CoffeePicker({
           <CoffeeCupIcon />
         </span>
       </button>
-      {open && (
-        <div
-          role="listbox"
-          className="absolute top-full mt-1.5 left-0 z-30 bg-white rounded-2xl border border-line shadow-card overflow-hidden min-w-[180px] max-h-[260px] overflow-y-auto animate-fadeUp"
-        >
-          {coffees.map((c) => {
-            const isActive = c.id === value;
-            return (
-              <button
-                key={c.id}
-                role="option"
-                aria-selected={isActive}
-                type="button"
-                onClick={() => {
-                  onSelect(c.id);
-                  setOpen(false);
-                }}
-                className={`w-full text-left px-3.5 py-2 text-[14px] transition flex items-center justify-between gap-3 ${
-                  isActive
-                    ? "bg-surface text-ink font-medium"
-                    : "text-ink hover:bg-surface"
-                }`}
-              >
-                <span>{c.name}</span>
-                <span className="text-[12px] tabular-nums text-muted">
-                  ${c.price}
-                </span>
-              </button>
-            );
-          })}
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <div className="p-5">
+          <h3 className="font-serif text-[20px] text-ink">Choose your coffee</h3>
+          <p className="mt-1 text-[12px] text-muted">All options available.</p>
+          <div className="mt-3 divide-y divide-line">
+            {coffees.map((c) => {
+              const isActive = c.id === value;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(c.id);
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between py-3 text-left transition active:scale-[0.99]"
+                >
+                  <span
+                    className={`text-[15px] ${isActive ? "text-ink font-medium" : "text-ink"}`}
+                  >
+                    {c.name}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-[13px] tabular-nums text-muted">
+                      ${c.price}
+                    </span>
+                    {isActive && (
+                      <span className="text-accent">
+                        <PickedTick />
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      )}
-    </div>
+      </Modal>
+    </>
+  );
+}
+
+function PickedTick() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 12.5l4.5 4.5L19 7.5"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

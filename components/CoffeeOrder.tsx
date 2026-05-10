@@ -119,7 +119,18 @@ function CoffeeLineCard({ line, index, onChange, onRemove }: LineProps) {
           <div className="relative">
             <select
               value={line.coffeeId}
-              onChange={(e) => onChange({ coffeeId: e.target.value })}
+              onChange={(e) => {
+                const newCoffeeId = e.target.value;
+                // Long black defaults to no milk; switching away from long black
+                // when "none" was selected falls back to regular milk.
+                const newMilkId =
+                  newCoffeeId === "long-black"
+                    ? "none"
+                    : line.milkId === "none"
+                      ? "regular"
+                      : line.milkId;
+                onChange({ coffeeId: newCoffeeId, milkId: newMilkId });
+              }}
               className="appearance-none bg-white rounded-xl pl-3 pr-7 py-1.5 font-medium text-ink text-[15px] border border-line focus:outline-none focus:border-ink/40"
             >
               {coffees.map((c) => (
@@ -149,16 +160,21 @@ function CoffeeLineCard({ line, index, onChange, onRemove }: LineProps) {
       </div>
 
       <Section label="Milk">
-        {milks.map((m) => (
-          <Chip
-            key={m.id}
-            active={m.id === line.milkId}
-            onClick={() => onChange({ milkId: m.id })}
-          >
-            {m.name}
-            {m.surcharge > 0 ? ` +$${m.surcharge.toFixed(2)}` : ""}
-          </Chip>
-        ))}
+        {milks.map((m) => {
+          const noMilkOnlyForLongBlack =
+            m.id === "none" && line.coffeeId !== "long-black";
+          return (
+            <Chip
+              key={m.id}
+              active={m.id === line.milkId}
+              disabled={noMilkOnlyForLongBlack}
+              onClick={() => onChange({ milkId: m.id })}
+            >
+              {m.name}
+              {m.surcharge > 0 ? ` +$${m.surcharge.toFixed(2)}` : ""}
+            </Chip>
+          );
+        })}
       </Section>
 
       <Section label="Syrup">
@@ -215,20 +231,25 @@ function Chip({
   onClick,
   children,
   icon,
+  disabled,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
   icon?: React.ReactNode;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`text-[11px] rounded-full px-2.5 py-1 border transition active:scale-95 inline-flex items-center gap-1 ${
-        active
-          ? "bg-ink text-white border-ink"
-          : "bg-white text-muted border-line hover:border-ink/40"
+      disabled={disabled}
+      className={`text-[11px] rounded-full px-2.5 py-1 border transition inline-flex items-center gap-1 ${
+        disabled
+          ? "bg-white text-muted/40 border-line/60 cursor-not-allowed"
+          : active
+            ? "bg-ink text-white border-ink active:scale-95"
+            : "bg-white text-muted border-line hover:border-ink/40 active:scale-95"
       }`}
     >
       {icon}

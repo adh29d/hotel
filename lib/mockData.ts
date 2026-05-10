@@ -65,9 +65,12 @@ export const coffees: Coffee[] = [
   { id: "cappuccino", name: "Cappuccino", price: 5 },
   { id: "long-black", name: "Long black", price: 5 },
   { id: "mocha", name: "Mocha", price: 5 },
+  { id: "chai-latte", name: "Chai latte", price: 5 },
+  { id: "matcha", name: "Matcha", price: 6 },
 ];
 
 export const milks: Milk[] = [
+  { id: "none", name: "No milk", surcharge: 0 },
   { id: "regular", name: "Regular", surcharge: 0 },
   { id: "oat", name: "Oat", surcharge: 0.8 },
   { id: "almond", name: "Almond", surcharge: 0.8 },

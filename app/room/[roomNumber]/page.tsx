@@ -23,7 +23,6 @@ import AnimatedTotal from "@/components/AnimatedTotal";
 import BottomSheet from "@/components/BottomSheet";
 import InvoiceRequestModal from "@/components/InvoiceRequestModal";
 import ReviewCard from "@/components/ReviewCard";
-import CoffeeCupIcon from "@/components/CoffeeCupIcon";
 
 const HERO_SRC =
   "https://beachcomberhotelandresort.com.au/wp-content/uploads/2022/09/Pelicans-Breakfast-417b.jpg";
@@ -315,26 +314,21 @@ export default function RoomLandingPage() {
           <button
             type="button"
             onClick={() => setCoffeeOpen(true)}
-            className="w-full flex items-center justify-between gap-3 text-left transition active:scale-[0.99]"
+            className="w-full flex items-center justify-between text-left transition active:scale-[0.99]"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-9 w-9 rounded-full bg-white border border-line flex items-center justify-center text-ink shrink-0">
-                <CoffeeCupIcon size={16} />
+            <div>
+              <div className="text-[15px] text-ink font-medium">
+                {isCheckoutDay
+                  ? "Feel like a coffee on the way out?"
+                  : "Feel like a coffee?"}
               </div>
-              <div className="min-w-0">
-                <div className="text-[15px] text-ink font-medium">
-                  {isCheckoutDay
-                    ? "Feel like a coffee on the way out?"
-                    : "Feel like a coffee?"}
-                </div>
-                <div className="text-[12px] text-muted mt-0.5 truncate">
-                  {itemCount === 0
-                    ? `${pickupLocation} · pick a time`
-                    : `${itemCount} coffee${itemCount === 1 ? "" : "s"} · at ${formatTime(pickupAt)}`}
-                </div>
+              <div className="text-[12px] text-muted mt-0.5">
+                {itemCount === 0
+                  ? `${pickupLocation} · pick a time`
+                  : `${itemCount} coffee${itemCount === 1 ? "" : "s"} · at ${formatTime(pickupAt)}`}
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2">
               {coffeeSubtotal > 0 && (
                 <span className="text-[13px] tabular-nums text-ink">
                   {formatMoney(coffeeSubtotal)}
@@ -369,13 +363,18 @@ export default function RoomLandingPage() {
       <BottomSheet
         open={coffeeOpen}
         onClose={() => setCoffeeOpen(false)}
+        title={
+          isCheckoutDay
+            ? "Feel like a coffee on the way out?"
+            : "Feel like a coffee?"
+        }
         footer={
           <button
             type="button"
             onClick={() => setCoffeeOpen(false)}
             className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99] flex items-center justify-center gap-2"
           >
-            <span>Send to kitchen</span>
+            <span>Done</span>
             {coffeeSubtotal > 0 && (
               <span className="opacity-70 tabular-nums">· {formatMoney(coffeeSubtotal)}</span>
             )}

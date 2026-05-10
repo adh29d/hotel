@@ -20,12 +20,10 @@ import CoffeeCupIcon from "./CoffeeCupIcon";
 export default function CoffeeOrder() {
   const {
     state,
-    reservation,
     addCoffeeLine,
     updateCoffeeLine,
     removeCoffeeLine,
     setPickupPreset,
-    coffeeSubtotal,
   } = useOrder();
 
   // Tick every 30s so "in 5 min" stays honest while the sheet is open.
@@ -40,33 +38,11 @@ export default function CoffeeOrder() {
     [state.pickup, now],
   );
 
-  const lastInitial = reservation?.guestLastName?.[0] ?? "";
-  const ticketId = reservation
-    ? `TKT-${reservation.roomNumber}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`
-    : "";
-
   return (
-    <div className="space-y-3 pb-1">
-      {/* Docket header — feels like a kitchen ticket */}
-      <div className="text-center pb-3 border-b border-dashed border-line">
-        <div className="text-[10px] uppercase tracking-[0.22em] text-muted font-mono">
-          Pelicans · Kitchen Ticket
-        </div>
-        {reservation && (
-          <div className="mt-1.5 text-[12.5px] text-ink font-mono tracking-tight">
-            Room {reservation.roomNumber} · {reservation.guestFirstName} {lastInitial}.
-          </div>
-        )}
-        <div className="text-[11px] text-muted tabular-nums font-mono">
-          {ticketId} · placed {formatTime(now)}
-        </div>
-      </div>
-
+    <div className="space-y-4">
       {/* Pickup chooser */}
-      <div className="px-1">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted font-mono">
-          Pickup
-        </div>
+      <div className="rounded-2xl bg-surface p-3.5">
+        <div className="text-[11px] uppercase tracking-[0.14em] text-muted">Pickup</div>
         <div className="mt-1 text-[14px] text-ink leading-snug">
           {pickupLocation} ·{" "}
           <span className="font-medium tabular-nums">at {formatTime(pickupAt)}</span>
@@ -89,16 +65,7 @@ export default function CoffeeOrder() {
         </div>
       </div>
 
-      <div className="border-t border-dashed border-line" />
-
       {/* Coffee lines */}
-      <div className="px-1">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-muted font-mono">
-          Order · {state.coffeeLines.length}{" "}
-          {state.coffeeLines.length === 1 ? "item" : "items"}
-        </div>
-      </div>
-
       <div className="space-y-2.5">
         {state.coffeeLines.map((line, idx) => (
           <CoffeeLineCard
@@ -119,13 +86,6 @@ export default function CoffeeOrder() {
           {state.coffeeLines.length === 0 ? "Add a coffee" : "Add another coffee"}
         </button>
       </div>
-
-      {state.coffeeLines.length > 0 && (
-        <div className="pt-3 mt-1 border-t border-dashed border-line flex justify-between text-[12px] font-mono">
-          <span className="uppercase tracking-[0.18em] text-muted">Subtotal</span>
-          <span className="tabular-nums text-ink">{formatMoney(coffeeSubtotal)}</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -246,7 +206,7 @@ function CoffeeLineCard({ line, index, onChange, onRemove }: LineProps) {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mt-3">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted mb-1.5 font-mono">
+      <div className="text-[10px] uppercase tracking-[0.14em] text-muted mb-1.5">
         {label}
       </div>
       <div className="flex flex-wrap gap-1.5">{children}</div>

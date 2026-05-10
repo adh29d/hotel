@@ -42,7 +42,10 @@ export default function PaymentPage() {
   };
 
   return (
-    <main className="h-[100dvh] flex flex-col bg-white">
+    <main
+      className="min-h-[100svh] flex flex-col bg-white"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <header className="px-5 pt-6 pb-2 flex items-center justify-between animate-fadeUp">
         <button
           type="button"
@@ -97,7 +100,10 @@ export default function PaymentPage() {
 
       <div className="flex-1" />
 
-      <section className="px-5 pb-8 space-y-2.5 animate-fadeUp">
+      <section
+        className="px-5 space-y-2.5 animate-fadeUp"
+        style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
+      >
         <PayButton
           label="Pay"
           onClick={() => pay("apple")}

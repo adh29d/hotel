@@ -26,6 +26,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: "#ffffff",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,8 +34,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="font-sans bg-white">
         <OrderProvider>
-          <div className="min-h-[100dvh] flex justify-center bg-[#0a0a0a]">
-            <div className="w-full max-w-[440px] min-h-[100dvh] bg-white relative overflow-hidden">
+          <div className="min-h-[100svh] flex justify-center bg-[#0a0a0a]">
+            <div className="w-full max-w-[440px] min-h-[100svh] bg-white relative">
               {children}
             </div>
           </div>

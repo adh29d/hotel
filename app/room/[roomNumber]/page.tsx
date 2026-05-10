@@ -109,6 +109,8 @@ export default function RoomLandingPage() {
   };
 
   // ---------- Hero (shared across paid + unpaid) ----------
+  // Sized in svh so it doesn't grow with scrollable content; clamped with
+  // pixel min/max so the proportion looks right from iPhone SE up to large phones.
   const Hero = (heroHeight: string) => (
     <>
       <div
@@ -125,9 +127,12 @@ export default function RoomLandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/15 to-white" />
       </div>
 
-      <header className="relative z-10 px-6 pt-14 pb-4 animate-fadeUp">
+      <header
+        className="relative z-10 px-6 pb-4 animate-fadeUp"
+        style={{ paddingTop: "max(3rem, env(safe-area-inset-top))" }}
+      >
         <h1
-          className="font-serif text-[36px] leading-[1.05] text-white"
+          className="font-serif text-[clamp(28px,8.6vw,36px)] leading-[1.05] text-white"
           style={{
             textShadow:
               "0 1px 2px rgba(0,0,0,0.5), 0 2px 16px rgba(0,0,0,0.4)",
@@ -175,10 +180,13 @@ export default function RoomLandingPage() {
   // ============ Paid state ============
   if (state.paid) {
     return (
-      <main className="relative min-h-[100dvh] flex flex-col">
-        {Hero("h-[40%]")}
+      <main className="relative min-h-[100svh] flex flex-col">
+        {Hero("h-[36svh] min-h-[220px] max-h-[360px]")}
 
-        <div className="relative z-10 px-5 pb-8 space-y-3 animate-fadeUp">
+        <div
+          className="relative z-10 px-5 space-y-3 animate-fadeUp"
+          style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
+        >
           {/* Payment received — pill + balance only */}
           <section className="rounded-3xl bg-surface p-5 flex items-center justify-between">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft text-accent px-3 py-1 text-[11px] font-medium tracking-tight">
@@ -260,8 +268,8 @@ export default function RoomLandingPage() {
   const ctaLabel = total === 0 ? "Nothing to pay" : "Pay balance";
 
   return (
-    <main className="relative h-[100dvh] flex flex-col overflow-hidden">
-      {Hero("h-[58%]")}
+    <main className="relative min-h-[100svh] flex flex-col">
+      {Hero("h-[44svh] min-h-[260px] max-h-[400px]")}
 
       <div className="flex-1" />
 
@@ -329,7 +337,10 @@ export default function RoomLandingPage() {
         </section>
       </div>
 
-      <div className="relative z-10 px-5 pb-6 pt-3 bg-white animate-fadeUp">
+      <div
+        className="sticky bottom-0 z-20 px-5 pt-3 bg-white animate-fadeUp"
+        style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="flex items-baseline justify-between mb-3 px-1">
           <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
           <span className="text-[26px] font-medium text-ink tabular-nums tracking-tight">

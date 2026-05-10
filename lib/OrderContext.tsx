@@ -10,6 +10,7 @@ import {
   PickupSelection,
   Reservation,
   reservations,
+  sizes,
   syrups,
   sweeteners,
 } from "./mockData";
@@ -17,6 +18,7 @@ import {
 export type CoffeeLine = {
   id: string;
   coffeeId: string;
+  sizeId: string;
   milkId: string;
   syrupId: string;
   sweetenerId: string;
@@ -101,6 +103,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         {
           id: newCoffeeId(),
           coffeeId: coffees[0].id,
+          sizeId: "regular",
           milkId: milks[0].id,
           syrupId: syrups[0].id,
           sweetenerId: sweeteners[0].id,
@@ -156,11 +159,13 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const coffeeSubtotal = useMemo(() => {
     return state.coffeeLines.reduce((sum, line) => {
       const coffee = coffees.find((c) => c.id === line.coffeeId);
+      const size = sizes.find((s) => s.id === line.sizeId);
       const milk = milks.find((m) => m.id === line.milkId);
       const syrup = syrups.find((s) => s.id === line.syrupId);
       const sweet = sweeteners.find((s) => s.id === line.sweetenerId);
       const unit =
         (coffee?.price ?? 0) +
+        (size?.surcharge ?? 0) +
         (milk?.surcharge ?? 0) +
         (syrup?.surcharge ?? 0) +
         (sweet?.surcharge ?? 0);

@@ -10,6 +10,7 @@ import {
   pickupPresetMinutes,
   presetLabel,
   resolvePickupTime,
+  sizes,
   sweeteners,
   syrups,
 } from "@/lib/mockData";
@@ -95,22 +96,25 @@ type LineProps = {
   line: {
     id: string;
     coffeeId: string;
+    sizeId: string;
     milkId: string;
     syrupId: string;
     sweetenerId: string;
     qty: number;
   };
   index: number;
-  onChange: (patch: Partial<{ coffeeId: string; milkId: string; syrupId: string; sweetenerId: string; qty: number }>) => void;
+  onChange: (patch: Partial<{ coffeeId: string; sizeId: string; milkId: string; syrupId: string; sweetenerId: string; qty: number }>) => void;
   onRemove: () => void;
 };
 
 function CoffeeLineCard({ line, index, onChange, onRemove }: LineProps) {
   const coffee = coffees.find((c) => c.id === line.coffeeId)!;
+  const size = sizes.find((s) => s.id === line.sizeId)!;
   const milk = milks.find((m) => m.id === line.milkId)!;
   const syrup = syrups.find((s) => s.id === line.syrupId)!;
   const sweet = sweeteners.find((s) => s.id === line.sweetenerId)!;
-  const unit = coffee.price + milk.surcharge + syrup.surcharge + sweet.surcharge;
+  const unit =
+    coffee.price + size.surcharge + milk.surcharge + syrup.surcharge + sweet.surcharge;
   const lineTotal = unit * line.qty;
 
   return (
@@ -147,6 +151,19 @@ function CoffeeLineCard({ line, index, onChange, onRemove }: LineProps) {
           </button>
         </div>
       </div>
+
+      <Section label="Size">
+        {sizes.map((s) => (
+          <Chip
+            key={s.id}
+            active={s.id === line.sizeId}
+            onClick={() => onChange({ sizeId: s.id })}
+          >
+            {s.name}
+            {s.surcharge > 0 ? ` +$${s.surcharge.toFixed(2)}` : ""}
+          </Chip>
+        ))}
+      </Section>
 
       <Section label="Milk">
         {milks.map((m) => {

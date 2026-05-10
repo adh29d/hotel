@@ -55,6 +55,7 @@ export function lateCheckoutFee(hour: number): number {
 
 // ---------- Coffee menu ----------
 export type Coffee = { id: string; name: string; price: number };
+export type Size = { id: string; name: string; surcharge: number };
 export type Milk = { id: string; name: string; surcharge: number };
 export type Syrup = { id: string; name: string; surcharge: number };
 export type Sweetener = { id: string; name: string; surcharge: number };
@@ -67,6 +68,12 @@ export const coffees: Coffee[] = [
   { id: "mocha", name: "Mocha", price: 5 },
   { id: "chai-latte", name: "Chai latte", price: 5 },
   { id: "matcha", name: "Matcha", price: 6 },
+];
+
+export const sizes: Size[] = [
+  { id: "small", name: "Small", surcharge: 0 },
+  { id: "regular", name: "Regular", surcharge: 0 },
+  { id: "large", name: "Large", surcharge: 1 },
 ];
 
 export const milks: Milk[] = [

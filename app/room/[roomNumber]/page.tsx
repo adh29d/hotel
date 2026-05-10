@@ -23,6 +23,7 @@ import AnimatedTotal from "@/components/AnimatedTotal";
 import BottomSheet from "@/components/BottomSheet";
 import InvoiceRequestModal from "@/components/InvoiceRequestModal";
 import ReviewCard from "@/components/ReviewCard";
+import Confetti from "@/components/Confetti";
 
 const HERO_SRC =
   "https://beachcomberhotelandresort.com.au/wp-content/uploads/2022/09/Pelicans-Breakfast-417b.jpg";
@@ -226,9 +227,12 @@ export default function RoomLandingPage() {
               <ReviewCard />
 
               {state.checkedOut ? (
-                <div className="w-full rounded-2xl bg-accent-soft text-accent py-4 text-[15px] font-medium tracking-tight flex items-center justify-center gap-2 animate-fadeUp">
-                  <CheckIcon /> Checked out · see you next time
-                </div>
+                <>
+                  <Confetti />
+                  <div className="w-full rounded-2xl bg-accent-soft text-accent py-4 px-4 text-[14px] font-medium tracking-tight flex items-center justify-center gap-2 text-center animate-fadeUp">
+                    <CheckIcon /> All checked out! We hope to see you again.
+                  </div>
+                </>
               ) : (
                 <button
                   type="button"

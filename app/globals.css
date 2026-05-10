@@ -79,3 +79,14 @@ a {
 .no-scrollbar {
   scrollbar-width: none;
 }
+
+@keyframes confetti-fall {
+  0% {
+    transform: translate(0, -20vh) rotate(var(--start-rot, 0deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--drift, 0px), 110vh) rotate(var(--end-rot, 720deg));
+    opacity: 1;
+  }
+}

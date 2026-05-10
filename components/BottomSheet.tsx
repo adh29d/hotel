@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 
 type Props = {
   open: boolean;
@@ -11,19 +12,23 @@ type Props = {
 };
 
 export default function BottomSheet({ open, onClose, title, children, footer }: Props) {
+  // Body scroll lock. Depends only on `open` so unrelated parent re-renders
+  // (which create a new `onClose` reference) don't toggle the lock.
+  useEffect(() => {
+    if (!open) return;
+    lockBodyScroll();
+    return () => unlockBodyScroll();
+  }, [open]);
+
+  // Escape closes — separate effect so it can re-bind when onClose changes
+  // without affecting the scroll lock.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    // Lock body scroll while open so the page underneath doesn't drift.
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
   if (!open) return null;
@@ -57,7 +62,9 @@ export default function BottomSheet({ open, onClose, title, children, footer }: 
             </button>
           </div>
         )}
-        <div className="overflow-y-auto no-scrollbar px-6 pb-2 flex-1">{children}</div>
+        <div className="overflow-y-auto overscroll-contain no-scrollbar px-6 pb-2 flex-1">
+          {children}
+        </div>
         {footer && (
           <div
             className="px-6 pt-3 border-t border-line/70 bg-white"

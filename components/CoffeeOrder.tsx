@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   coffees,
   formatMoney,
@@ -116,33 +116,20 @@ function CoffeeLineCard({ line, index, onChange, onRemove }: LineProps) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-[11px] tabular-nums text-muted w-5">{index}.</span>
-          <div className="relative">
-            <select
-              value={line.coffeeId}
-              onChange={(e) => {
-                const newCoffeeId = e.target.value;
-                // Long black defaults to no milk; switching away from long black
-                // when "none" was selected falls back to regular milk.
-                const newMilkId =
-                  newCoffeeId === "long-black"
-                    ? "none"
-                    : line.milkId === "none"
-                      ? "regular"
-                      : line.milkId;
-                onChange({ coffeeId: newCoffeeId, milkId: newMilkId });
-              }}
-              className="appearance-none bg-white rounded-xl pl-3 pr-7 py-1.5 font-medium text-ink text-[15px] border border-line focus:outline-none focus:border-ink/40"
-            >
-              {coffees.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted">
-              <ChevronDown />
-            </span>
-          </div>
+          <CoffeePicker
+            value={line.coffeeId}
+            onSelect={(newCoffeeId) => {
+              // Long black defaults to no milk; switching away from long black
+              // when "none" was selected falls back to regular milk.
+              const newMilkId =
+                newCoffeeId === "long-black"
+                  ? "none"
+                  : line.milkId === "none"
+                    ? "regular"
+                    : line.milkId;
+              onChange({ coffeeId: newCoffeeId, milkId: newMilkId });
+            }}
+          />
         </div>
         <div className="flex items-center gap-2.5">
           <span className="text-[13px] tabular-nums text-ink">
@@ -271,16 +258,109 @@ function PlusIcon() {
   );
 }
 
-function ChevronDown() {
+function CoffeeCupIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M6 9l6 6 6-6"
+        d="M4 9h14v5.5a4.5 4.5 0 0 1-4.5 4.5h-5A4.5 4.5 0 0 1 4 14.5V9z"
         stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
+        strokeWidth="1.6"
         strokeLinejoin="round"
       />
+      <path
+        d="M18 11h2a2 2 0 1 1 0 4h-2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 3.5c-.6 1 .6 2 0 3M12 3.5c-.6 1 .6 2 0 3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
+  );
+}
+
+function CoffeePicker({
+  value,
+  onSelect,
+}: {
+  value: string;
+  onSelect: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const selected = coffees.find((c) => c.id === value)!;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 bg-white rounded-xl pl-3 pr-3 py-1.5 font-medium text-ink text-[15px] border border-line transition active:scale-[0.98] hover:border-ink/40"
+      >
+        <span>{selected.name}</span>
+        <span className="text-muted">
+          <CoffeeCupIcon />
+        </span>
+      </button>
+      {open && (
+        <div
+          role="listbox"
+          className="absolute top-full mt-1.5 left-0 z-30 bg-white rounded-2xl border border-line shadow-card overflow-hidden min-w-[180px] max-h-[260px] overflow-y-auto animate-fadeUp"
+        >
+          {coffees.map((c) => {
+            const isActive = c.id === value;
+            return (
+              <button
+                key={c.id}
+                role="option"
+                aria-selected={isActive}
+                type="button"
+                onClick={() => {
+                  onSelect(c.id);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-2 text-[14px] transition flex items-center justify-between gap-3 ${
+                  isActive
+                    ? "bg-surface text-ink font-medium"
+                    : "text-ink hover:bg-surface"
+                }`}
+              >
+                <span>{c.name}</span>
+                <span className="text-[12px] tabular-nums text-muted">
+                  ${c.price}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

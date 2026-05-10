@@ -269,7 +269,7 @@ export default function RoomLandingPage() {
 
   return (
     <main className="relative min-h-[100svh] flex flex-col">
-      {Hero("h-[44svh] min-h-[260px] max-h-[400px]")}
+      {Hero("h-[40svh] min-h-[230px] max-h-[360px]")}
 
       <div className="flex-1" />
 
@@ -279,7 +279,7 @@ export default function RoomLandingPage() {
             <div className="text-[11px] uppercase tracking-[0.14em] text-muted">
               {allPaid ? "Stay paid" : "Your current balance"}
             </div>
-            <div className="mt-1 text-[36px] font-medium leading-none text-ink tabular-nums tracking-tight">
+            <div className="mt-1 text-[clamp(28px,9vw,36px)] font-medium leading-none text-ink tabular-nums tracking-tight">
               {allPaid ? "$0" : formatMoney(outstandingBalance)}
             </div>
             {!allPaid && reservation.charges.length > 0 && (
@@ -298,7 +298,7 @@ export default function RoomLandingPage() {
 
           {isCheckoutDay && (
             <>
-              <div className="my-4 h-px bg-line" />
+              <div className="my-3.5 h-px bg-line" />
               <LateCheckoutSlider
                 hour={state.checkoutHour}
                 onHourChange={setCheckoutHour}
@@ -306,7 +306,7 @@ export default function RoomLandingPage() {
             </>
           )}
 
-          <div className="my-4 h-px bg-line" />
+          <div className="my-3.5 h-px bg-line" />
 
           <button
             type="button"
@@ -338,12 +338,12 @@ export default function RoomLandingPage() {
       </div>
 
       <div
-        className="sticky bottom-0 z-20 px-5 pt-3 bg-white animate-fadeUp"
+        className="relative z-10 px-5 pt-4 bg-white animate-fadeUp"
         style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="flex items-baseline justify-between mb-3 px-1">
+        <div className="flex items-baseline justify-between mb-2.5 px-1">
           <span className="text-[12px] uppercase tracking-[0.14em] text-muted">Total</span>
-          <span className="text-[26px] font-medium text-ink tabular-nums tracking-tight">
+          <span className="text-[clamp(22px,6.6vw,26px)] font-medium text-ink tabular-nums tracking-tight">
             <AnimatedTotal value={total} />
           </span>
         </div>

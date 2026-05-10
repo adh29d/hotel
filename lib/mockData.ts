@@ -91,7 +91,7 @@ export const sweeteners: Sweetener[] = [
 // ---------- Pickup ----------
 export const pickupLocation = "Pelicans Breakfast Restaurant";
 
-export const pickupPresetMinutes = [10, 15, 30, 60] as const;
+export const pickupPresetMinutes = [10, 15, 20, 30] as const;
 export type PickupPreset = (typeof pickupPresetMinutes)[number];
 
 export const kitchenHours = {

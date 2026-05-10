@@ -13,12 +13,6 @@ import {
   sweeteners,
   syrups,
 } from "@/lib/mockData";
-
-const PICKUP_LATEST = "14:00";
-
-function toTimeStr(d: Date): string {
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
 import { useOrder } from "@/lib/OrderContext";
 import QuantityStepper from "./QuantityStepper";
 
@@ -29,7 +23,6 @@ export default function CoffeeOrder() {
     updateCoffeeLine,
     removeCoffeeLine,
     setPickupPreset,
-    setPickupCustom,
   } = useOrder();
 
   // Tick every 30s so "in 5 min" stays honest while the sheet is open.
@@ -68,28 +61,7 @@ export default function CoffeeOrder() {
               </Chip>
             );
           })}
-          <Chip
-            active={state.pickup.kind === "custom"}
-            onClick={() => setPickupCustom()}
-            icon={<ClockIcon />}
-          >
-            Pick a time
-          </Chip>
         </div>
-
-        {state.pickup.kind === "custom" && (
-          <div className="mt-3 animate-fadeUp">
-            <input
-              type="time"
-              value={state.pickup.time}
-              min={toTimeStr(now)}
-              max={PICKUP_LATEST}
-              step={300}
-              onChange={(e) => setPickupCustom(e.target.value)}
-              className="rounded-xl bg-white border border-line px-3 py-2 text-[14px] text-ink tabular-nums focus:outline-none focus:border-ink/40"
-            />
-          </div>
-        )}
       </div>
 
       {/* Coffee lines */}
@@ -262,21 +234,6 @@ function Chip({
       {icon}
       <span>{children}</span>
     </button>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M12 7v5l3 2"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 

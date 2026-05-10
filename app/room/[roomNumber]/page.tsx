@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useOrder } from "@/lib/OrderContext";
 import {
@@ -49,6 +49,17 @@ export default function RoomLandingPage() {
   const [coffeeOpen, setCoffeeOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [invoiceSent, setInvoiceSent] = useState(false);
+  const checkOutBtnRef = useRef<HTMLButtonElement>(null);
+  const [confettiOrigin, setConfettiOrigin] =
+    useState<{ x: number; y: number } | null>(null);
+
+  const handleCheckOut = () => {
+    if (checkOutBtnRef.current) {
+      const r = checkOutBtnRef.current.getBoundingClientRect();
+      setConfettiOrigin({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    }
+    markCheckedOut();
+  };
 
   useEffect(() => {
     initRoom(roomNumber);
@@ -228,15 +239,21 @@ export default function RoomLandingPage() {
 
               {state.checkedOut ? (
                 <>
-                  <Confetti />
+                  {confettiOrigin && (
+                    <Confetti
+                      originX={confettiOrigin.x}
+                      originY={confettiOrigin.y}
+                    />
+                  )}
                   <div className="w-full rounded-2xl bg-accent-soft text-accent py-4 px-4 text-[14px] font-medium tracking-tight flex items-center justify-center gap-2 text-center animate-fadeUp">
-                    <CheckIcon /> All checked out! We hope to see you again.
+                    <CheckIcon /> Checked out! We hope to see you again.
                   </div>
                 </>
               ) : (
                 <button
+                  ref={checkOutBtnRef}
                   type="button"
-                  onClick={markCheckedOut}
+                  onClick={handleCheckOut}
                   className="w-full rounded-2xl bg-ink text-white py-4 text-[15px] font-medium tracking-tight transition active:scale-[0.99]"
                 >
                   Tap to check out
